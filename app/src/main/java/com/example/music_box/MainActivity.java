@@ -38,6 +38,7 @@ public class MainActivity extends AppCompatActivity {
         TextView tv = findViewById(R.id.sample_text);
         tv.setText(stringFromJNI());
         boolean b=runOboeSinePlayer();
+        setDefaultStreamValues(this);
     }
 
     @Override
@@ -90,7 +91,6 @@ public class MainActivity extends AppCompatActivity {
             int defaultSampleRate = Integer.parseInt(sampleRateStr);
             String framesPerBurstStr = myAudioMgr.getProperty(AudioManager.PROPERTY_OUTPUT_FRAMES_PER_BUFFER);
             int defaultFramesPerBurst = Integer.parseInt(framesPerBurstStr);
-
             native_setDefaultStreamValues(defaultSampleRate, defaultFramesPerBurst);
         }
     }
