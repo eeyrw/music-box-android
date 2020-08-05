@@ -1,5 +1,6 @@
 #include <jni.h>
 #include <string>
+#include <oboe/Oboe.h>
 
 extern "C" JNIEXPORT jstring JNICALL
 Java_com_example_music_1box_MainActivity_stringFromJNI(
