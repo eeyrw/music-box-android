@@ -17,7 +17,9 @@ add_library( # Sets the name of the library.
              SHARED
 
              # Provides a relative path to your source file(s).
-             native-lib.cpp )
+             native-lib.cpp
+        MegaDroneEngine.cpp
+        )
 
 # Searches for a specified prebuilt library and stores the path as a
 # variable. Because CMake includes system libraries in the search path by
@@ -38,13 +40,13 @@ find_library( # Sets the name of the path variable.
 
 target_link_libraries( # Specifies the target library.
                        native-lib
-
+        oboe
                        # Links the target library to the log library
                        # included in the NDK.
-                       ${log-lib} oboe)
+                       ${log-lib})
 
 # Set the path to the Oboe directory.
-set (OBOE_DIR ./)
+set (OBOE_DIR ./oboe)
 
 # Add the Oboe library as a subdirectory in your project.
 # add_subdirectory tells CMake to look in this directory to
@@ -55,4 +57,5 @@ add_subdirectory (${OBOE_DIR} ./oboe)
 # Specify the path to the Oboe header files.
 # This allows targets compiled with this CMake (application code)
 # to see public Oboe headers, in order to access its API.
-include_directories (${OBOE_DIR}/include)
+include_directories (${OBOE_DIR}/include ./shared ./debug-utils
+        )
