@@ -19,6 +19,13 @@ add_library( # Sets the name of the library.
              # Provides a relative path to your source file(s).
              native-lib.cpp
         MegaDroneEngine.cpp
+        ./WaveTableSynthesizer/AlgorithmTest.c
+        ./WaveTableSynthesizer/EnvelopeTable.c        
+        ./WaveTableSynthesizer/Player.c
+        ./WaveTableSynthesizer/score.c
+        ./WaveTableSynthesizer/SynthCore.c
+        ./WaveTableSynthesizer/WaveTable_Celesta_C5.c
+        ./WaveTableSynthesizer/WaveTable_Celesta_C6.c     
         )
 
 # Searches for a specified prebuilt library and stores the path as a
@@ -57,5 +64,4 @@ add_subdirectory (${OBOE_DIR} ./oboe)
 # Specify the path to the Oboe header files.
 # This allows targets compiled with this CMake (application code)
 # to see public Oboe headers, in order to access its API.
-include_directories (${OBOE_DIR}/include ./shared ./debug-utils
-        )
+include_directories (${OBOE_DIR}/include ./shared ./debug-utils ./WaveTableSynthesizer)
