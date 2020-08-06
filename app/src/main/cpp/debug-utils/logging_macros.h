@@ -20,7 +20,7 @@
 
 #if 1
 #ifndef MODULE_NAME
-#define MODULE_NAME  "AUDIO-APP"
+#define MODULE_NAME  "com.example.music_box"
 #endif
 
 #define LOGV(...) __android_log_print(ANDROID_LOG_VERBOSE, MODULE_NAME, __VA_ARGS__)

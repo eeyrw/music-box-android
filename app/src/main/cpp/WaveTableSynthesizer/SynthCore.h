@@ -5,6 +5,11 @@
 
 #define POLY_NUM 32
 
+#define NoteOn NoteOnC
+#define GenDecayEnvlope GenDecayEnvlopeC
+#define Synth SynthC
+
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -12,7 +17,7 @@ extern "C" {
 typedef struct _SoundUnit
 {
 	uint32_t wavetablePos;
-	uint32_t waveTableAddress;
+	uint64_t waveTableAddress;
 	uint32_t waveTableLen;
 	uint32_t waveTableLoopLen;
 	uint32_t waveTableAttackLen;

@@ -78,3 +78,9 @@ Java_com_example_music_1box_MainActivity_native_1setDefaultStreamValues(JNIEnv *
 
 } // extern "C"
 
+extern "C"
+JNIEXPORT void JNICALL
+Java_com_example_music_1box_MainActivity_noteOn(JNIEnv *env, jobject thiz, jlong engine_handle,
+                                                jint note) {
+    // TODO: implement noteOn()
+}

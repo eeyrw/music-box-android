@@ -1,5 +1,6 @@
 #include <memory>
 #include "MusicBoxEngine.h"
+#include "WaveTableSynthesizerSource.h"
 
 /**
  * Main audio engine for the MegaDrone sample. It is responsible for:
@@ -34,6 +35,7 @@ oboe::Result MusicBoxEngine::createPlaybackStream() {
             ->setPerformanceMode(oboe::PerformanceMode::LowLatency)
             ->setFormat(oboe::AudioFormat::Float)
             ->setCallback(mCallback.get())
+            ->setSampleRate(32000)
             ->openManagedStream(mStream);
 }
 
@@ -53,7 +55,7 @@ void MusicBoxEngine::start(){
     auto result = createPlaybackStream();
     if (result == Result::OK){
         // Create our synthesizer audio source using the properties of the stream
-        mAudioSource = std::make_shared<Synth>(mStream->getSampleRate(), mStream->getChannelCount());
+        mAudioSource = std::make_shared<WaveTableSynthesizerSource>(mStream->getSampleRate(), mStream->getChannelCount());
         mCallback->setSource(std::dynamic_pointer_cast<IRenderableAudio>(mAudioSource));
         mStream->start();
     } else {

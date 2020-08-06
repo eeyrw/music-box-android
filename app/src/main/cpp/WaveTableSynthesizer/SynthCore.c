@@ -16,7 +16,7 @@ void SynthInit(Synthesizer* synth)
 		soundUnits[i].envelopeLevel = 0;
 		soundUnits[i].envelopePos = 0;
         soundUnits[i].val = 0;
-		soundUnits[i].waveTableAddress = (uint32_t)WaveTable_Celesta_C5;
+		soundUnits[i].waveTableAddress = WaveTable_Celesta_C5;
 		soundUnits[i].waveTableLen = WAVETABLE_CELESTA_C5_LEN;
 		soundUnits[i].waveTableLoopLen = WAVETABLE_CELESTA_C5_LOOP_LEN;
 		soundUnits[i].waveTableAttackLen = WAVETABLE_CELESTA_C5_ATTACK_LEN;
@@ -32,11 +32,12 @@ void NoteOnC(Synthesizer* synth,uint8_t note)
 	//disable_interrupts();
 	soundUnits[lastSoundUnit].increment = WaveTable_Celesta_C5_Increment[note&0x7F];
 	soundUnits[lastSoundUnit].wavetablePos = 0;
-	soundUnits[lastSoundUnit].waveTableAddress = (uint32_t)WaveTable_Celesta_C5;
+	soundUnits[lastSoundUnit].waveTableAddress = WaveTable_Celesta_C5;
 	soundUnits[lastSoundUnit].waveTableLen = WAVETABLE_CELESTA_C5_LEN;
 	soundUnits[lastSoundUnit].waveTableLoopLen = WAVETABLE_CELESTA_C5_LOOP_LEN;
 	soundUnits[lastSoundUnit].waveTableAttackLen = WAVETABLE_CELESTA_C5_ATTACK_LEN;
 	soundUnits[lastSoundUnit].envelopeLevel = 255;
+	soundUnits[lastSoundUnit].envelopePos = 0;
 	//enable_interrupts();
 
 	lastSoundUnit++;
@@ -84,5 +85,15 @@ void GenDecayEnvlopeC(Synthesizer* synth)
 			soundUnits[i].envelopePos += 1;
 		}
 	}
+}
+
+void SynthAsm(Synthesizer* synth)
+{
+
+}
+
+void GenDecayEnvlopeAsm(Synthesizer* synth)
+{
+
 }
 //#endif

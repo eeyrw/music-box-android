@@ -3,6 +3,7 @@ package com.example.music_box;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.os.Bundle;
+import android.widget.Button;
 import android.widget.TextView;
 
 import android.content.Context;
@@ -19,6 +20,7 @@ public class MainActivity extends AppCompatActivity {
     private native long startEngine(int[] cpuIds);
     private native void stopEngine(long engineHandle);
     private native void tap(long engineHandle, boolean isDown);
+    private native void noteOn(long engineHandle,int note);
 
     private static native void native_setDefaultStreamValues(int sampleRate, int framesPerBurst);
 
@@ -34,6 +36,7 @@ public class MainActivity extends AppCompatActivity {
 
         // Example of a call to a native method
         TextView tv = findViewById(R.id.sample_text);
+        Button btn = findViewById(R.id.button);
         tv.setText(stringFromJNI());
         setDefaultStreamValues(this);
     }

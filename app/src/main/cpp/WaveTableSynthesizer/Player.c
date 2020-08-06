@@ -3,12 +3,13 @@
 #include <string.h>
 #include "SynthCore.h"
 #include "Player.h"
+#include <logging_macros.h>
 
 extern unsigned char Score[];
 
 void Player32kProc(Player *player)
 {
-    SynthAsm(&(player->mainSynthesizer));
+    Synth(&(player->mainSynthesizer));
     player->currentTick++;
     if(player->decayGenTick<200)
          player->decayGenTick+=1;
@@ -18,10 +19,11 @@ void PlayerProcess(Player *player)
 {
 
     uint8_t temp;
-
+    //LOGD("PlayerProcess\n");
     if (player->decayGenTick >= 150)
     {
-        GenDecayEnvlopeAsm(&(player->mainSynthesizer));
+        //LOGD("GenDecayEnvlope\n");
+        GenDecayEnvlope(&(player->mainSynthesizer));
         player->decayGenTick = 0;
     }
     if (player->status == STATUS_PLAYING)
@@ -38,13 +40,15 @@ void PlayerProcess(Player *player)
                 }
                 else
                 {
-                    NoteOnAsm(&(player->mainSynthesizer), temp);
+                    LOGD("Note On:%d\n",temp);
+                    NoteOn(&(player->mainSynthesizer), temp);
                 }
             } while ((temp & 0x80) == 0);
             
             PlayUpdateNextScoreTick(player);
         }
     }
+    //LOGD("PlayerProcessWEnd\n");
 }
 
 void PlayUpdateNextScoreTick(Player *player)

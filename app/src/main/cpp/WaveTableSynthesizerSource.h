@@ -8,32 +8,24 @@
 #include <Mixer.h>
 #include <MonoToStereo.h>
 
-constexpr int kNumOscillators = 50;
-constexpr float kOscBaseFrequency = 116.0;
-constexpr float kOscDivisor = 33;
-constexpr float kOscAmplitude = 0.009;
+
+#include "WaveTableSynthesizer.h"
+
 
 
 class WaveTableSynthesizerSource : public TappableAudioSource {
 public:
 
-    Synth(int32_t sampleRate, int32_t channelCount) :
+    WaveTableSynthesizerSource(int32_t sampleRate, int32_t channelCount) :
     TappableAudioSource(sampleRate, channelCount) {
-        for (int i = 0; i < kNumOscillators; ++i) {
-            mOscs[i].setSampleRate(mSampleRate);
-            mOscs[i].setFrequency(kOscBaseFrequency + (static_cast<float>(i) / kOscDivisor));
-            mOscs[i].setAmplitude(kOscAmplitude);
-            mMixer.addTrack(&mOscs[i]);
-        }
+
         if (mChannelCount == oboe::ChannelCount::Stereo) {
             mOutputStage =  &mConverter;
-        } else {
-            mOutputStage = &mMixer;
         }
     }
 
     void tap(bool isOn) override {
-        for (auto &osc : mOscs) osc.setWaveOn(isOn);
+
     };
 
     // From IRenderableAudio
@@ -41,13 +33,12 @@ public:
         mOutputStage->renderAudio(audioData, numFrames);
     };
 
-    virtual ~Synth() {
+    virtual ~WaveTableSynthesizerSource() {
     }
 private:
     // Rendering objects
-    std::array<Oscillator, kNumOscillators> mOscs;
-    Mixer mMixer;
-    MonoToStereo mConverter = MonoToStereo(&mMixer);
+    WaveTableSynthesizer synthesizer;
+    MonoToStereo mConverter = MonoToStereo(&synthesizer);
     IRenderableAudio *mOutputStage; // This will point to either the mixer or converter, so it needs to be raw
 };
 
