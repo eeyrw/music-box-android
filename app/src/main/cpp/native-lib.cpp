@@ -1,5 +1,8 @@
 #include <jni.h>
 #include <string>
+#include <vector>
+#include "MegaDroneEngine.h"
+
 
 extern "C" JNIEXPORT jstring JNICALL
 Java_com_example_music_1box_MainActivity_stringFromJNI(
@@ -8,22 +11,6 @@ Java_com_example_music_1box_MainActivity_stringFromJNI(
     std::string hello = "Hello from C++";
     return env->NewStringUTF(hello.c_str());
 }
-
-
-extern "C" JNIEXPORT jboolean JNICALL
-Java_com_example_music_1box_MainActivity_runOboeSinePlayer(
-        JNIEnv* env,
-        jobject /* this */) {
-
-    return true;
-}
-
-#include <jni.h>
-#include <string>
-#include <vector>
-
-#include "MegaDroneEngine.h"
-
 
 std::vector<int> convertJavaArrayToVector(JNIEnv *env, jintArray intArray) {
     std::vector<int> v;
