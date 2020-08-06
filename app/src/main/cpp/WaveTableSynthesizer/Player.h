@@ -4,6 +4,10 @@
 #include <stdint.h>
 #include "SynthCore.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 
 enum PLAY_STATUS{
     STATUS_STOP=0,
@@ -30,4 +34,9 @@ extern void PlayerPlay(Player* player);
 extern void UpdateTick(Player* player);
 extern uint8_t PlayNoteTimingCheck(Player* player);
 extern void PlayUpdateNextScoreTick(Player* player);
+
+#ifdef __cplusplus
+} //end extern "C"
+#endif
+
 #endif

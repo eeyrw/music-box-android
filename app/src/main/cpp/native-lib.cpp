@@ -1,7 +1,7 @@
 #include <jni.h>
 #include <string>
 #include <vector>
-#include "MegaDroneEngine.h"
+#include "MusicBoxEngine.h"
 
 
 extern "C" JNIEXPORT jstring JNICALL
@@ -38,7 +38,7 @@ Java_com_example_music_1box_MainActivity_startEngine(JNIEnv *env, jobject /*unus
                                                                 jintArray jCpuIds) {
     std::vector<int> cpuIds = convertJavaArrayToVector(env, jCpuIds);
     LOGD("cpu ids size: %d", static_cast<int>(cpuIds.size()));
-    MegaDroneEngine  *engine = new MegaDroneEngine(std::move(cpuIds));
+    MusicBoxEngine  *engine = new MusicBoxEngine(std::move(cpuIds));
     LOGD("Engine Started");
     return reinterpret_cast<jlong>(engine);
 }
@@ -46,7 +46,7 @@ Java_com_example_music_1box_MainActivity_startEngine(JNIEnv *env, jobject /*unus
 JNIEXPORT void JNICALL
 Java_com_example_music_1box_MainActivity_stopEngine(JNIEnv *env, jobject instance,
                                                                jlong jEngineHandle) {
-    auto engine = reinterpret_cast<MegaDroneEngine*>(jEngineHandle);
+    auto engine = reinterpret_cast<MusicBoxEngine*>(jEngineHandle);
     if (engine) {
         delete engine;
     } else {
@@ -59,7 +59,7 @@ JNIEXPORT void JNICALL
 Java_com_example_music_1box_MainActivity_tap(JNIEnv *env, jobject instance,
                                                         jlong jEngineHandle, jboolean isDown) {
 
-    auto *engine = reinterpret_cast<MegaDroneEngine*>(jEngineHandle);
+    auto *engine = reinterpret_cast<MusicBoxEngine*>(jEngineHandle);
     if (engine) {
         engine->tap(isDown);
     } else {

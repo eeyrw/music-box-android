@@ -5,6 +5,10 @@
 
 #define POLY_NUM 32
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef struct _SoundUnit
 {
 	uint32_t wavetablePos;
@@ -61,5 +65,8 @@ extern void NoteOnAsm(Synthesizer* synth,uint8_t note);
 extern void GenDecayEnvlopeAsm(Synthesizer* synth);
 extern void SynthAsm(Synthesizer* synth);
 
+#ifdef __cplusplus
+} //end extern "C"
+#endif
 
 #endif

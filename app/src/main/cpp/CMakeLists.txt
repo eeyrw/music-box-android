@@ -28,7 +28,7 @@ add_library( # Sets the name of the library.
 
              # Provides a relative path to your source file(s).
              native-lib.cpp
-        MegaDroneEngine.cpp
+        MusicBoxEngine.cpp
         ./WaveTableSynthesizer/AlgorithmTest.c
         ./WaveTableSynthesizer/EnvelopeTable.c        
         ./WaveTableSynthesizer/Player.c

@@ -6,6 +6,16 @@
 #define WAVETABLE_CELESTA_C5_LEN 2608
 #define WAVETABLE_CELESTA_C5_ATTACK_LEN 1998
 #define WAVETABLE_CELESTA_C5_LOOP_LEN 610
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 extern const int16_t WaveTable_Celesta_C5[WAVETABLE_CELESTA_C5_LEN];
 extern const uint16_t WaveTable_Celesta_C5_Increment[];
+
+#ifdef __cplusplus
+} //end extern "C"
+#endif
+
 #endif
