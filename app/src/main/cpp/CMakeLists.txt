@@ -5,6 +5,16 @@
 
 cmake_minimum_required(VERSION 3.4.1)
 
+if(${ANDROID_ABI} STREQUAL "x86_64")
+    enable_language(ASM_NASM)
+
+    #set(asm_SRCS src/main/cpp/test.asm)
+elseif(${ANDROID_ABI} STREQUAL "arm64-v8a")
+    enable_language(ASM)
+
+    #set(asm_SRCS src/main/cpp/arm_test.s)
+endif()
+
 # Creates and names a library, sets it as either STATIC
 # or SHARED, and provides the relative paths to its source code.
 # You can define multiple libraries, and CMake builds them for you.
