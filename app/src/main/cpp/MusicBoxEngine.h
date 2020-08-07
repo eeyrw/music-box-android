@@ -19,6 +19,7 @@ public:
     virtual ~MusicBoxEngine() = default;
 
     void tap(bool isDown);
+    void noteOn(uint8_t note);
 
     // from IRestartable
     virtual void restart() override;

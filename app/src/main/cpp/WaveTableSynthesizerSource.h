@@ -21,6 +21,11 @@ public:
             PlayerInit(&player);
     };
 
+    void noteOn(uint8_t note)
+    {
+        NoteOn(&player,note);
+    };
+
     // From IRenderableAudio
     void renderAudio(float *audioData, int32_t numFrames) override
     {

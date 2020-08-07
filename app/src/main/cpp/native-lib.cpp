@@ -82,5 +82,10 @@ extern "C"
 JNIEXPORT void JNICALL
 Java_com_example_music_1box_MainActivity_noteOn(JNIEnv *env, jobject thiz, jlong engine_handle,
                                                 jint note) {
-    // TODO: implement noteOn()
+    auto *engine = reinterpret_cast<MusicBoxEngine*>(engine_handle);
+    if (engine) {
+        engine->noteOn(reinterpret_cast<uint8_t>(note));
+    } else {
+        LOGE("Engine handle is invalid, call createEngine() to create a new one");
+    }
 }

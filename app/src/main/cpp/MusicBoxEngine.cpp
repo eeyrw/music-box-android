@@ -25,6 +25,11 @@ void MusicBoxEngine::tap(bool isDown)
     mAudioSource->tap(isDown);
 }
 
+void MusicBoxEngine::noteOn(uint8_t note)
+{
+    mAudioSource->noteOn(note);
+}
+
 void MusicBoxEngine::restart()
 {
     start();
