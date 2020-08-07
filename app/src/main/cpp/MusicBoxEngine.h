@@ -4,7 +4,6 @@
 #include <oboe/Oboe.h>
 #include <vector>
 
-#include "Synth.h"
 #include <DefaultAudioStreamCallback.h>
 #include <TappableAudioSource.h>
 #include <IRestartable.h>
