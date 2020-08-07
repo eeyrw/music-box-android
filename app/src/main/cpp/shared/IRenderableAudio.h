@@ -24,7 +24,7 @@ class IRenderableAudio {
 
 public:
     virtual ~IRenderableAudio() = default;
-    virtual void renderAudio(float *audioData, int32_t numFrames) = 0;
+    virtual void renderAudio(int16_t *audioData, int32_t numFrames) = 0;
 };
 
 

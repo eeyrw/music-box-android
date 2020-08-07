@@ -26,7 +26,7 @@ public:
 
     MonoToStereo(IRenderableAudio *input) : mInput(input){};
 
-    void renderAudio(float *audioData, int32_t numFrames) override {
+    void renderAudio(int16_t *audioData, int32_t numFrames) override {
 
         constexpr int kChannelCountStereo = 2;
 

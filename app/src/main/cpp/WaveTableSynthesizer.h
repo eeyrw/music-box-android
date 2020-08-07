@@ -14,10 +14,8 @@
  * limitations under the License.
  */
 
-
 #ifndef WAVETABLESYNTHESIZER_H_H
 #define WAVETABLESYNTHESIZER_H_H
-
 
 #include <cstdint>
 #include <atomic>
@@ -26,8 +24,8 @@
 #include <IRenderableAudio.h>
 #include <Player.h>
 
-
-class WaveTableSynthesizer : public IRenderableAudio {
+class WaveTableSynthesizer : public IRenderableAudio
+{
 
 public:
     WaveTableSynthesizer()
@@ -38,28 +36,31 @@ public:
 
     ~WaveTableSynthesizer() = default;
 
-    void setWaveOn(bool isWaveOn) {
+    void setWaveOn(bool isWaveOn)
+    {
         mIsWaveOn.store(isWaveOn);
     };
 
-    void setSampleRate(int32_t sampleRate) {
+    void setSampleRate(int32_t sampleRate)
+    {
         mSampleRate = sampleRate;
     };
 
     // From IRenderableAudio
-    void renderAudio(float *audioData, int32_t numFrames) override {
-            for (int i = 0; i < numFrames; ++i) {
-              Player32kProc(&player);
-                audioData[i]=(float)(player.mainSynthesizer.mixOut>>8)/(float)32768;
-                PlayerProcess(&player);
-            }
+    void renderAudio(int16_t *audioData, int32_t numFrames) override
+    {
+        for (int i = 0; i < numFrames; ++i)
+        {
+            Player32kProc(&player);
+            audioData[i] = (int16_t)(player.mainSynthesizer.mixOut >> 8);
+            PlayerProcess(&player);
+        }
     };
 
 private:
-    std::atomic<bool> mIsWaveOn { false };
+    std::atomic<bool> mIsWaveOn{false};
     int32_t mSampleRate = kDefaultSampleRate;
     Player player;
-
 };
 
 #endif //WAVETABLESYNTHESIZER_H_H

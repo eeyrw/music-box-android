@@ -1,7 +1,6 @@
 #ifndef MUSICBOX_ENGINE_H
 #define MUSICBOX_ENGINE_H
 
-
 #include <oboe/Oboe.h>
 #include <vector>
 
@@ -12,7 +11,8 @@
 
 using namespace oboe;
 
-class MusicBoxEngine : public IRestartable {
+class MusicBoxEngine : public IRestartable
+{
 
 public:
     MusicBoxEngine(std::vector<int> cpuIds);
@@ -33,6 +33,5 @@ private:
     void createCallback(std::vector<int> cpuIds);
     void start();
 };
-
 
 #endif //MUSICBOX_ENGINE_H
