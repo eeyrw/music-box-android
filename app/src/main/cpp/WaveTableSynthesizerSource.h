@@ -5,8 +5,6 @@
 #include <TappableAudioSource.h>
 #include <MonoToStereo.h>
 
-#include "WaveTableSynthesizer.h"
-
 class WaveTableSynthesizerSource : public TappableAudioSource
 {
 public:
