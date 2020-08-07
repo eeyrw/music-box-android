@@ -18,8 +18,8 @@ public class MainActivity extends AppCompatActivity {
     private final String TAG = com.example.music_box.MainActivity.class.toString();
     private static long mEngineHandle = 0;
 
-    private native long startEngine(int[] cpuIds);
-    private native void stopEngine(long engineHandle);
+    private native long createEngine(int[] cpuIds);
+    private native void deleteEngine(long engineHandle);
     private native void tap(long engineHandle, boolean isDown);
     private native void noteOn(long engineHandle,int note);
 
@@ -32,16 +32,19 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        Log.d(TAG, "onCreate");
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
         // Example of a call to a native method
         TextView tv = findViewById(R.id.sample_text);
+        final TextView tvPlayStatus = findViewById(R.id.tvPlayStatus);
         Button btn = findViewById(R.id.button);
         btn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 tap(mEngineHandle, true);
+                tvPlayStatus.setText("Playing...");
             }
         });
 
@@ -50,24 +53,40 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 tap(mEngineHandle, false);
+                tvPlayStatus.setText("Stop");
             }
         });
 
         tv.setText(stringFromJNI());
         setDefaultStreamValues(this);
+        mEngineHandle = createEngine(getExclusiveCores());
     }
 
     @Override
     protected void onResume(){
-        mEngineHandle = startEngine(getExclusiveCores());
+        Log.d(TAG, "onResume");
         super.onResume();
     }
 
 
     @Override
     protected void onPause(){
-        stopEngine(mEngineHandle);
+        Log.d(TAG, "onPause");
         super.onPause();
+    }
+
+    @Override
+    protected void onDestroy(){
+        Log.d(TAG, "onDestroy");
+       //  deleteEngine(mEngineHandle);
+        super.onDestroy();
+    }
+
+    @Override
+    public void onBackPressed() {
+        Log.d(TAG, "onBackPressed");
+        deleteEngine(mEngineHandle);
+        super.onBackPressed();
     }
 
     @Override

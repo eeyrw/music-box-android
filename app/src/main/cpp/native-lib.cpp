@@ -39,7 +39,7 @@ extern "C" {
  * @return a pointer to the audio engine. This should be passed to other methods
  */
 JNIEXPORT jlong JNICALL
-Java_com_example_music_1box_MainActivity_startEngine(JNIEnv *env, jobject /*unused*/,
+Java_com_example_music_1box_MainActivity_createEngine(JNIEnv *env, jobject /*unused*/,
                                                                 jintArray jCpuIds) {
     std::vector<int> cpuIds = convertJavaArrayToVector(env, jCpuIds);
     LOGD("cpu ids size: %d", static_cast<int>(cpuIds.size()));
@@ -49,7 +49,7 @@ Java_com_example_music_1box_MainActivity_startEngine(JNIEnv *env, jobject /*unus
 }
 
 JNIEXPORT void JNICALL
-Java_com_example_music_1box_MainActivity_stopEngine(JNIEnv *env, jobject instance,
+Java_com_example_music_1box_MainActivity_deleteEngine(JNIEnv *env, jobject instance,
                                                                jlong jEngineHandle) {
     auto engine = reinterpret_cast<MusicBoxEngine*>(jEngineHandle);
     if (engine) {
