@@ -4,6 +4,7 @@
 #include <array>
 #include <TappableAudioSource.h>
 #include <MonoToStereo.h>
+#include <Player.h>
 
 class WaveTableSynthesizerSource : public TappableAudioSource
 {
@@ -23,11 +24,11 @@ public:
 
     void noteOn(uint8_t note)
     {
-        NoteOn(&player,note);
+        NoteOn(&player.mainSynthesizer,note);
     };
 
     // From IRenderableAudio
-    void renderAudio(float *audioData, int32_t numFrames) override
+    void renderAudio(int16_t *audioData, int32_t numFrames) override
     {
         for (int i = 0; i < numFrames; ++i)
         {
@@ -56,7 +57,6 @@ public:
 
 private:
     // Rendering objects
-    int32_t mSampleRate = kDefaultSampleRate;
     Player player;
 };
 

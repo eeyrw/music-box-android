@@ -8,7 +8,12 @@ extern "C" JNIEXPORT jstring JNICALL
 Java_com_example_music_1box_MainActivity_stringFromJNI(
         JNIEnv* env,
         jobject /* this */) {
-    std::string hello = "Hello from C++";
+
+#if defined(__aarch64__) || defined(__x86_64__)
+    std::string hello = "Hello from Native Code Music Box with 64bit CPU";
+#else
+    std::string hello = "Hello from Native Code Music Box with 32bit CPU";
+#endif
     return env->NewStringUTF(hello.c_str());
 }
 
@@ -84,7 +89,7 @@ Java_com_example_music_1box_MainActivity_noteOn(JNIEnv *env, jobject thiz, jlong
                                                 jint note) {
     auto *engine = reinterpret_cast<MusicBoxEngine*>(engine_handle);
     if (engine) {
-        engine->noteOn(reinterpret_cast<uint8_t>(note));
+        engine->noteOn(static_cast<uint8_t>(note));
     } else {
         LOGE("Engine handle is invalid, call createEngine() to create a new one");
     }

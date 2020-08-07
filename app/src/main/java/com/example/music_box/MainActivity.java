@@ -3,6 +3,7 @@ package com.example.music_box;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.os.Bundle;
+import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 
@@ -43,6 +44,15 @@ public class MainActivity extends AppCompatActivity {
                 tap(mEngineHandle, true);
             }
         });
+
+        Button bt2 = findViewById(R.id.button2);
+        bt2.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                tap(mEngineHandle, false);
+            }
+        });
+
         tv.setText(stringFromJNI());
         setDefaultStreamValues(this);
     }
@@ -62,11 +72,10 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public boolean onTouchEvent(MotionEvent event) {
-
         if (event.getAction() == MotionEvent.ACTION_DOWN){
-           // tap(mEngineHandle, true);
+           noteOn(mEngineHandle, 46);
         } else if (event.getAction() == MotionEvent.ACTION_UP){
-            // tap(mEngineHandle, false);
+           // noteOn(mEngineHandle, false);
         }
         return super.onTouchEvent(event);
     }
