@@ -9,6 +9,12 @@
 #define GenDecayEnvlope GenDecayEnvlopeC
 #define Synth SynthC
 
+#if defined(__aarch64__) || defined(__x86_64__)
+#define ADDRESS_TYPE uint64_t
+#else
+#define ADDRESS_TYPE uint32_t
+#endif
+
 
 #ifdef __cplusplus
 extern "C" {
@@ -17,7 +23,7 @@ extern "C" {
 typedef struct _SoundUnit
 {
 	uint32_t wavetablePos;
-	uint64_t waveTableAddress;
+	ADDRESS_TYPE waveTableAddress;
 	uint32_t waveTableLen;
 	uint32_t waveTableLoopLen;
 	uint32_t waveTableAttackLen;
@@ -53,7 +59,7 @@ typedef struct _InstrumentInfo
 {
 	uint8_t instrumentId;
 	uint8_t sampleNum;
-	uint32_t sampleBaseAddr;
+	ADDRESS_TYPE sampleBaseAddr;
 	SampleInfo *samples;
 }InstrumentInfo;
 
