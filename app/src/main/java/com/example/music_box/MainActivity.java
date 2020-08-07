@@ -37,6 +37,12 @@ public class MainActivity extends AppCompatActivity {
         // Example of a call to a native method
         TextView tv = findViewById(R.id.sample_text);
         Button btn = findViewById(R.id.button);
+        btn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                tap(mEngineHandle, true);
+            }
+        });
         tv.setText(stringFromJNI());
         setDefaultStreamValues(this);
     }
@@ -58,9 +64,9 @@ public class MainActivity extends AppCompatActivity {
     public boolean onTouchEvent(MotionEvent event) {
 
         if (event.getAction() == MotionEvent.ACTION_DOWN){
-            tap(mEngineHandle, true);
+           // tap(mEngineHandle, true);
         } else if (event.getAction() == MotionEvent.ACTION_UP){
-            tap(mEngineHandle, false);
+            // tap(mEngineHandle, false);
         }
         return super.onTouchEvent(event);
     }
