@@ -11,8 +11,10 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="vertical"
-        tools:layout_editor_absoluteX="16dp"
-        tools:layout_editor_absoluteY="-59dp">
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
 
         <TextView
             android:id="@+id/tvPlayStatus"
@@ -55,17 +57,23 @@
         <TextView
             android:id="@+id/sample_text"
             android:layout_width="386dp"
-            android:layout_height="92dp"
+            android:layout_height="72dp"
             android:text="Hello World!"
             android:textSize="24sp" />
 
         <TextView
             android:id="@+id/tvNoteNum"
             android:layout_width="match_parent"
-            android:layout_height="136dp"
+            android:layout_height="wrap_content"
             android:text="TextView"
             android:textColor="?attr/colorPrimaryDark"
             android:textSize="80sp" />
+
+        <Button
+            android:id="@+id/btnChooseMidi"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Choose midi file" />
 
     </LinearLayout>
 

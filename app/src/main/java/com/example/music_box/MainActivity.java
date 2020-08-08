@@ -2,6 +2,7 @@ package com.example.music_box;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.provider.ContactsContract;
 import android.view.View;
@@ -30,6 +31,8 @@ import java.io.InputStream;
 public class MainActivity extends AppCompatActivity {
     private final String TAG = com.example.music_box.MainActivity.class.toString();
     private static long mEngineHandle = 0;
+    private String midiFilePath;
+    private MidiProcessor processor;
 
     private native long createEngine(int[] cpuIds);
 
@@ -71,7 +74,8 @@ public class MainActivity extends AppCompatActivity {
             // System.out.println(mLabel + " received event: " + event);
             final int note = ev.getNoteValue();
             int velocity = ev.getVelocity();
-            if (velocity != 0) {
+            int channel = ev.getChannel();
+            if (velocity != 0 && channel != 9) {
                 noteOn(mEngineHandle, note);
                 Log.d(TAG, String.format("onMidiEvent: %d", note));
                 runOnUiThread(new Runnable() {
@@ -105,14 +109,14 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
-    private void printMidiFile() {
+    private void printMidiFile(String midiFilePath) {
 
         try {
-            InputStream input = getAssets().open("midi-sample/bach_tocatta_fugue_d_minor.mid");
+            InputStream input = getAssets().open(midiFilePath);
             MidiFile midi = new MidiFile(input);
             // Create a new MidiProcessor:
             MidiEventPlayer ep = new MidiEventPlayer("sd");
-            MidiProcessor processor = new MidiProcessor(midi);
+            processor = new MidiProcessor(midi);
 
             processor.registerEventListener(ep, NoteOn.class);
 
@@ -147,6 +151,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 tap(mEngineHandle, false);
+                processor.stop();
                 tvPlayStatus.setText("Stop");
             }
         });
@@ -175,13 +180,37 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View v) {
                 pause(mEngineHandle, false);
                 tvPlayStatus.setText("Midi Playing...");
-                printMidiFile();
+                printMidiFile(midiFilePath);
+            }
+        });
+
+        Button btnChooseMidi = findViewById(R.id.btnChooseMidi);
+        btnChooseMidi.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(MainActivity.this, FileListActivity.class);
+                startActivityForResult(intent, 0);//此处的requestCode应与下面结果处理函中调用的requestCode一致
             }
         });
 
         tv.setText(stringFromJNI());
         setDefaultStreamValues(this);
         mEngineHandle = createEngine(getExclusiveCores());
+        Intent intent = new Intent(MainActivity.this, FileListActivity.class);
+        startActivityForResult(intent, 0);//此处的requestCode应与下面结果处理函中调用的requestCode一致
+
+
+    }
+
+    //结果处理函数，当从secondActivity中返回时调用此函数
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == 0 && resultCode == RESULT_OK) {
+            Bundle bundle = data.getExtras();
+            if (bundle != null)
+                midiFilePath = bundle.getString("filePath");
+        }
     }
 
     @Override
