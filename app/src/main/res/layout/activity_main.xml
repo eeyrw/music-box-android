@@ -10,7 +10,9 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:orientation="vertical">
+        android:orientation="vertical"
+        tools:layout_editor_absoluteX="16dp"
+        tools:layout_editor_absoluteY="-59dp">
 
         <TextView
             android:id="@+id/tvPlayStatus"
@@ -41,7 +43,6 @@
             android:id="@+id/btnMoveon"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="64dp"
             android:text="Move on" />
 
         <Button
@@ -54,7 +55,7 @@
         <TextView
             android:id="@+id/sample_text"
             android:layout_width="386dp"
-            android:layout_height="153dp"
+            android:layout_height="92dp"
             android:text="Hello World!"
             android:textSize="24sp" />
 

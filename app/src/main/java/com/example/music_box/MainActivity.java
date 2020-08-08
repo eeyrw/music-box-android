@@ -69,13 +69,18 @@ public class MainActivity extends AppCompatActivity {
         public void onEvent(MidiEvent event, long ms) {
             NoteOn ev = (NoteOn) event;
             // System.out.println(mLabel + " received event: " + event);
-            int note = ev.getNoteValue();
+            final int note = ev.getNoteValue();
             int velocity = ev.getVelocity();
             if (velocity != 0) {
                 noteOn(mEngineHandle, note);
                 Log.d(TAG, String.format("onMidiEvent: %d", note));
-                final TextView tvNoteNum = findViewById(R.id.tvNoteNum);
-                tvNoteNum.setText(String.format("N: %d", note));
+                runOnUiThread(new Runnable() {
+                    public void run() {
+                        final TextView tvNoteNum = findViewById(R.id.tvNoteNum);
+                        tvNoteNum.setText(String.format("N: %d", note));
+                    }
+                });
+
             }
 
 
@@ -83,16 +88,22 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         public void onStop(boolean finished) {
-            final TextView tvPlayStatus = findViewById(R.id.tvPlayStatus);
             if (finished) {
                 Log.d(TAG, "onMidiEvent: Stop");
                 pause(mEngineHandle, true);
-                tvPlayStatus.setText("Stop");
+                runOnUiThread(new Runnable() {
+                    public void run() {
+                        final TextView tvPlayStatus = findViewById(R.id.tvPlayStatus);
+                        tvPlayStatus.setText("Stop");
+                    }
+                });
             } else {
                 // System.out.println(mLabel + " paused");
             }
         }
+
     }
+
 
     private void printMidiFile() {
 
@@ -174,22 +185,22 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @Override
-    protected void onResume(){
+    protected void onResume() {
         Log.d(TAG, "onResume");
         super.onResume();
     }
 
 
     @Override
-    protected void onPause(){
+    protected void onPause() {
         Log.d(TAG, "onPause");
         super.onPause();
     }
 
     @Override
-    protected void onDestroy(){
+    protected void onDestroy() {
         Log.d(TAG, "onDestroy");
-       //  deleteEngine(mEngineHandle);
+        //  deleteEngine(mEngineHandle);
         super.onDestroy();
     }
 
@@ -202,10 +213,10 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public boolean onTouchEvent(MotionEvent event) {
-        if (event.getAction() == MotionEvent.ACTION_DOWN){
-           noteOn(mEngineHandle, 46);
-        } else if (event.getAction() == MotionEvent.ACTION_UP){
-           // noteOn(mEngineHandle, false);
+        if (event.getAction() == MotionEvent.ACTION_DOWN) {
+            noteOn(mEngineHandle, 46);
+        } else if (event.getAction() == MotionEvent.ACTION_UP) {
+            // noteOn(mEngineHandle, false);
         }
         return super.onTouchEvent(event);
     }
@@ -213,7 +224,7 @@ public class MainActivity extends AppCompatActivity {
     // Obtain CPU cores which are reserved for the foreground app. The audio thread can be
     // bound to these cores to avoids the risk of it being migrated to slower or more contended
     // core(s).
-    private int[] getExclusiveCores(){
+    private int[] getExclusiveCores() {
         int[] exclusiveCores = {};
 
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.N) {
@@ -222,7 +233,7 @@ public class MainActivity extends AppCompatActivity {
         } else {
             try {
                 exclusiveCores = android.os.Process.getExclusiveCores();
-            } catch (RuntimeException e){
+            } catch (RuntimeException e) {
                 Log.w(TAG, "getExclusiveCores() is not supported on this device.");
             }
         }
@@ -230,7 +241,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     static void setDefaultStreamValues(Context context) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1){
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
             AudioManager myAudioMgr = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
             String sampleRateStr = myAudioMgr.getProperty(AudioManager.PROPERTY_OUTPUT_SAMPLE_RATE);
             int defaultSampleRate = Integer.parseInt(sampleRateStr);
@@ -239,6 +250,7 @@ public class MainActivity extends AppCompatActivity {
             native_setDefaultStreamValues(defaultSampleRate, defaultFramesPerBurst);
         }
     }
+
     /**
      * A native method that is implemented by the 'native-lib' native library,
      * which is packaged with this application.
