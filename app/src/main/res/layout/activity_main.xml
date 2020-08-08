@@ -26,6 +26,12 @@
             android:text="Start" />
 
         <Button
+            android:id="@+id/btnStartMidi"
+            android:layout_width="143dp"
+            android:layout_height="wrap_content"
+            android:text="Start MIDI" />
+
+        <Button
             android:id="@+id/btnPause"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -48,9 +54,18 @@
         <TextView
             android:id="@+id/sample_text"
             android:layout_width="386dp"
-            android:layout_height="212dp"
+            android:layout_height="153dp"
             android:text="Hello World!"
             android:textSize="24sp" />
+
+        <TextView
+            android:id="@+id/tvNoteNum"
+            android:layout_width="match_parent"
+            android:layout_height="136dp"
+            android:text="TextView"
+            android:textColor="?attr/colorPrimaryDark"
+            android:textSize="80sp" />
+
     </LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

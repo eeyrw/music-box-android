@@ -3,6 +3,7 @@ package com.example.music_box;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.os.Bundle;
+import android.provider.ContactsContract;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
@@ -13,13 +14,27 @@ import android.os.Build;
 import android.util.Log;
 import android.view.MotionEvent;
 
+import com.pdrogfer.mididroid.MidiFile;
+import com.pdrogfer.mididroid.event.MidiEvent;
+import com.pdrogfer.mididroid.event.NoteOn;
+import com.pdrogfer.mididroid.event.meta.Tempo;
+import com.pdrogfer.mididroid.examples.EventPrinter;
+import com.pdrogfer.mididroid.util.MidiEventListener;
+import com.pdrogfer.mididroid.util.MidiProcessor;
+
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+
 
 public class MainActivity extends AppCompatActivity {
     private final String TAG = com.example.music_box.MainActivity.class.toString();
     private static long mEngineHandle = 0;
 
     private native long createEngine(int[] cpuIds);
+
     private native void deleteEngine(long engineHandle);
+
     private native void tap(long engineHandle, boolean isDown);
 
     private native void pause(long engineHandle, boolean isPause);
@@ -31,6 +46,71 @@ public class MainActivity extends AppCompatActivity {
     // Used to load the 'native-lib' library on application startup.
     static {
         System.loadLibrary("native-lib");
+    }
+
+    // This class will print any event it receives to the console
+    public class MidiEventPlayer implements MidiEventListener {
+        private String mLabel;
+
+        public MidiEventPlayer(String label) {
+            mLabel = label;
+        }
+
+        @Override
+        public void onStart(boolean fromBeginning) {
+            if (fromBeginning) {
+                // System.out.println(mLabel + " Started!");
+            } else {
+                // System.out.println(mLabel + " resumed");
+            }
+        }
+
+        @Override
+        public void onEvent(MidiEvent event, long ms) {
+            NoteOn ev = (NoteOn) event;
+            // System.out.println(mLabel + " received event: " + event);
+            int note = ev.getNoteValue();
+            int velocity = ev.getVelocity();
+            if (velocity != 0) {
+                noteOn(mEngineHandle, note);
+                Log.d(TAG, String.format("onMidiEvent: %d", note));
+                final TextView tvNoteNum = findViewById(R.id.tvNoteNum);
+                tvNoteNum.setText(String.format("N: %d", note));
+            }
+
+
+        }
+
+        @Override
+        public void onStop(boolean finished) {
+            final TextView tvPlayStatus = findViewById(R.id.tvPlayStatus);
+            if (finished) {
+                Log.d(TAG, "onMidiEvent: Stop");
+                pause(mEngineHandle, true);
+                tvPlayStatus.setText("Stop");
+            } else {
+                // System.out.println(mLabel + " paused");
+            }
+        }
+    }
+
+    private void printMidiFile() {
+
+        try {
+            InputStream input = getAssets().open("midi-sample/bach_tocatta_fugue_d_minor.mid");
+            MidiFile midi = new MidiFile(input);
+            // Create a new MidiProcessor:
+            MidiEventPlayer ep = new MidiEventPlayer("sd");
+            MidiProcessor processor = new MidiProcessor(midi);
+
+            processor.registerEventListener(ep, NoteOn.class);
+
+// Start the processor:
+            processor.start();
+        } catch (IOException e) {
+            System.err.println(e);
+        }
+
     }
 
     @Override
@@ -75,6 +155,16 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View v) {
                 pause(mEngineHandle, false);
                 tvPlayStatus.setText("Playing...");
+            }
+        });
+
+        Button btnStartMidi = findViewById(R.id.btnStartMidi);
+        btnStartMidi.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                pause(mEngineHandle, false);
+                tvPlayStatus.setText("Midi Playing...");
+                printMidiFile();
             }
         });
 
