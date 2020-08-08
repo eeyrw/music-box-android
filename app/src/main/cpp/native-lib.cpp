@@ -87,9 +87,19 @@ extern "C"
 JNIEXPORT void JNICALL
 Java_com_example_music_1box_MainActivity_noteOn(JNIEnv *env, jobject thiz, jlong engine_handle,
                                                 jint note) {
-    auto *engine = reinterpret_cast<MusicBoxEngine*>(engine_handle);
+    auto *engine = reinterpret_cast<MusicBoxEngine *>(engine_handle);
     if (engine) {
         engine->noteOn(static_cast<uint8_t>(note));
+    } else {
+        LOGE("Engine handle is invalid, call createEngine() to create a new one");
+    }
+}extern "C"
+JNIEXPORT void JNICALL
+Java_com_example_music_1box_MainActivity_pause(JNIEnv *env, jobject thiz, jlong engine_handle,
+                                               jboolean is_pause) {
+    auto *engine = reinterpret_cast<MusicBoxEngine *>(engine_handle);
+    if (engine) {
+        engine->pause(static_cast<bool>(is_pause));
     } else {
         LOGE("Engine handle is invalid, call createEngine() to create a new one");
     }

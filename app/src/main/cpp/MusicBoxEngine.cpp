@@ -14,42 +14,48 @@
  *
  * @param cpuIds
  */
-MusicBoxEngine::MusicBoxEngine(std::vector<int> cpuIds)
-{
+MusicBoxEngine::MusicBoxEngine(std::vector<int> cpuIds) {
     createCallback(cpuIds);
     start();
 }
 
-void MusicBoxEngine::tap(bool isDown)
-{
+void MusicBoxEngine::tap(bool isDown) {
     mAudioSource->tap(isDown);
+    if (isDown)
+        mStream->start();
+    else
+        mStream->stop();
 }
 
-void MusicBoxEngine::noteOn(uint8_t note)
-{
+void MusicBoxEngine::pause(bool isPause) {
+    if (isPause)
+        mStream->pause();
+    else
+        mStream->start();
+}
+
+void MusicBoxEngine::noteOn(uint8_t note) {
     mAudioSource->noteOn(note);
 }
 
-void MusicBoxEngine::restart()
-{
+void MusicBoxEngine::restart() {
     start();
 }
 
 // Create the playback stream
-oboe::Result MusicBoxEngine::createPlaybackStream()
-{
+oboe::Result MusicBoxEngine::createPlaybackStream() {
     oboe::AudioStreamBuilder builder;
     return builder.setSharingMode(oboe::SharingMode::Exclusive)
-        ->setPerformanceMode(oboe::PerformanceMode::LowLatency)
-        ->setFormat(oboe::AudioFormat::I16)
-        ->setCallback(mCallback.get())
-        ->setSampleRate(32000)
-        ->openManagedStream(mStream);
+            ->setPerformanceMode(oboe::PerformanceMode::LowLatency)
+            ->setFormat(oboe::AudioFormat::Float)
+            ->setCallback(mCallback.get())
+            ->setSampleRate(32000)
+            ->setFramesPerCallback(128)
+            ->openManagedStream(mStream);
 }
 
 // Create the callback and set its thread affinity to the supplied CPU core IDs
-void MusicBoxEngine::createCallback(std::vector<int> cpuIds)
-{
+void MusicBoxEngine::createCallback(std::vector<int> cpuIds) {
     // Create the callback, we supply ourselves as the parent so that we can restart the stream
     // when it's disconnected
     mCallback = std::make_unique<DefaultAudioStreamCallback>(*this);
@@ -60,18 +66,15 @@ void MusicBoxEngine::createCallback(std::vector<int> cpuIds)
     mCallback->setThreadAffinityEnabled(true);
 }
 
-void MusicBoxEngine::start()
-{
+void MusicBoxEngine::start() {
     auto result = createPlaybackStream();
-    if (result == Result::OK)
-    {
+    if (result == Result::OK) {
         // Create our synthesizer audio source using the properties of the stream
-        mAudioSource = std::make_shared<WaveTableSynthesizerSource>(mStream->getSampleRate(), mStream->getChannelCount());
+        mAudioSource = std::make_shared<WaveTableSynthesizerSource>(mStream->getSampleRate(),
+                                                                    mStream->getChannelCount());
         mCallback->setSource(std::dynamic_pointer_cast<IRenderableAudio>(mAudioSource));
-        mStream->start();
-    }
-    else
-    {
+        // mStream->start();
+    } else {
         LOGE("Failed to create the playback stream. Error: %s", convertToText(result));
     }
 }

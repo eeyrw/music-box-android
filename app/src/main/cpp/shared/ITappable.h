@@ -19,7 +19,9 @@
 
 class ITappable {
 public:
-    virtual ~ITappable()  = default;
+    virtual ~ITappable() = default;
+
     virtual void tap(bool isDown) = 0;
 };
+
 #endif //SAMPLES_ITAPPABLE_H

@@ -1,3 +1,4 @@
 <resources>
-    <string name="app_name">music-box</string>
+    <string name="app_name">Music Box</string>
+    <string name="titlebar_text">WaveTable Synthesizer Music Box</string>
 </resources>

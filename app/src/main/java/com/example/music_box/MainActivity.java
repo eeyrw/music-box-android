@@ -21,7 +21,10 @@ public class MainActivity extends AppCompatActivity {
     private native long createEngine(int[] cpuIds);
     private native void deleteEngine(long engineHandle);
     private native void tap(long engineHandle, boolean isDown);
-    private native void noteOn(long engineHandle,int note);
+
+    private native void pause(long engineHandle, boolean isPause);
+
+    private native void noteOn(long engineHandle, int note);
 
     private static native void native_setDefaultStreamValues(int sampleRate, int framesPerBurst);
 
@@ -54,6 +57,24 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View v) {
                 tap(mEngineHandle, false);
                 tvPlayStatus.setText("Stop");
+            }
+        });
+
+        Button btnPause = findViewById(R.id.btnPause);
+        btnPause.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                pause(mEngineHandle, true);
+                tvPlayStatus.setText("Pause");
+            }
+        });
+
+        Button btnMoveon = findViewById(R.id.btnMoveon);
+        btnMoveon.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                pause(mEngineHandle, false);
+                tvPlayStatus.setText("Playing...");
             }
         });
 

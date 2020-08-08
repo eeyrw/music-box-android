@@ -22,6 +22,8 @@ public:
     void tap(bool isDown);
     void noteOn(uint8_t note);
 
+    void pause(bool isPause);
+
     // from IRestartable
     virtual void restart() override;
 

@@ -45,7 +45,7 @@ public:
             mIsThreadAffinitySet = true;
         }
 
-        int16_t *outputBuffer = static_cast<int16_t *>(audioData);
+        float *outputBuffer = static_cast<float *>(audioData);
 
         std::shared_ptr<IRenderableAudio> localRenderable = mRenderable;
         if (!localRenderable) {
