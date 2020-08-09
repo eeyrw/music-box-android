@@ -29,7 +29,7 @@ public:
     void renderAudio(float *audioData, int32_t numFrames) override {
         for (int i = 0; i < numFrames; ++i) {
             Player32kProc(&player);
-            audioData[i] = (float) (player.mainSynthesizer.mixOut >> 8) / (float) 32768;
+            audioData[i] = (float) (player.mainSynthesizer.mixOut >> 8) / (float) 32768 * 0.5;
             PlayerProcess(&player);
         }
 
