@@ -7,6 +7,7 @@ import android.os.Bundle;
 import android.provider.ContactsContract;
 import android.view.View;
 import android.widget.Button;
+import android.widget.SeekBar;
 import android.widget.TextView;
 
 import android.content.Context;
@@ -33,6 +34,7 @@ public class MainActivity extends AppCompatActivity {
     private static long mEngineHandle = 0;
     private String midiFilePath;
     private MidiProcessor processor;
+    private int transposeValue = 0;
 
     private native long createEngine(int[] cpuIds);
 
@@ -76,14 +78,17 @@ public class MainActivity extends AppCompatActivity {
             int velocity = ev.getVelocity();
             int channel = ev.getChannel();
             if (velocity != 0 && channel != 9) {
-                noteOn(mEngineHandle, note);
-                Log.d(TAG, String.format("onMidiEvent: %d", note));
-                runOnUiThread(new Runnable() {
-                    public void run() {
-                        final TextView tvNoteNum = findViewById(R.id.tvNoteNum);
-                        tvNoteNum.setText(String.format("N: %d", note));
-                    }
-                });
+                final int noteTranpose = note + transposeValue;
+                if (noteTranpose >= 0 && noteTranpose <= 127) {
+                    noteOn(mEngineHandle, noteTranpose);
+                    Log.d(TAG, String.format("onMidiEvent: %d", noteTranpose));
+                    runOnUiThread(new Runnable() {
+                        public void run() {
+                            final TextView tvNoteNum = findViewById(R.id.tvNoteNum);
+                            tvNoteNum.setText(String.format("N: %d", noteTranpose));
+                        }
+                    });
+                }
 
             }
 
@@ -161,6 +166,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 pause(mEngineHandle, true);
+                processor.stop();
                 tvPlayStatus.setText("Pause");
             }
         });
@@ -170,6 +176,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 pause(mEngineHandle, false);
+                processor.start();
                 tvPlayStatus.setText("Playing...");
             }
         });
@@ -193,6 +200,26 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        SeekBar sbTranspose = findViewById(R.id.sbTranspose);
+        sbTranspose.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                transposeValue = progress - 24;
+                TextView tvTransposeValue = findViewById(R.id.tvTransposeValue);
+                tvTransposeValue.setText(String.format("Transpose: %d half-tone", transposeValue));
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+
+            }
+        });
+
         tv.setText(stringFromJNI());
         setDefaultStreamValues(this);
         mEngineHandle = createEngine(getExclusiveCores());
@@ -210,6 +237,8 @@ public class MainActivity extends AppCompatActivity {
             Bundle bundle = data.getExtras();
             if (bundle != null)
                 midiFilePath = bundle.getString("filePath");
+            TextView tvFileName = findViewById(R.id.tvFileName);
+            tvFileName.setText(midiFilePath);
         }
     }
 
