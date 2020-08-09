@@ -75,10 +75,10 @@
         <TextView
             android:id="@+id/tvNoteNum"
             android:layout_width="match_parent"
-            android:layout_height="122dp"
+            android:layout_height="wrap_content"
             android:text="N: ?"
             android:textColor="?attr/colorPrimaryDark"
-            android:textSize="80sp" />
+            android:textSize="18sp" />
 
         <TextView
             android:id="@+id/sample_text"
@@ -115,6 +115,11 @@
             android:layout_height="35dp"
             android:text="Transpose: 0 half-tone"
             android:textSize="18sp" />
+
+        <com.customview.graph.LineGraphView
+            android:id="@+id/lineGraphView"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
 
     </LinearLayout>
 

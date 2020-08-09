@@ -15,6 +15,7 @@ import android.os.Build;
 import android.util.Log;
 import android.view.MotionEvent;
 
+import com.customview.graph.LineGraphView;
 import com.pdrogfer.mididroid.MidiFile;
 import com.pdrogfer.mididroid.event.MidiEvent;
 import com.pdrogfer.mididroid.event.NoteOn;
@@ -218,6 +219,10 @@ public class MainActivity extends AppCompatActivity {
 
             }
         });
+
+        LineGraphView mLineGraphView = (LineGraphView) findViewById(R.id.lineGraphView);
+        float[] aaa = new float[128];
+        mLineGraphView.setValueArray(aaa);
 
         tv.setText(stringFromJNI());
         setDefaultStreamValues(this);
