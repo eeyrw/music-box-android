@@ -103,4 +103,23 @@ Java_com_example_music_1box_MainActivity_pause(JNIEnv *env, jobject thiz, jlong 
     } else {
         LOGE("Engine handle is invalid, call createEngine() to create a new one");
     }
+}extern "C"
+JNIEXPORT jfloatArray JNICALL
+Java_com_example_music_1box_MainActivity_getWaveformData(JNIEnv *env, jobject thiz,
+                                                         jlong engine_handle) {
+    //1.新建长度len数组
+    jfloatArray jarr = env->NewFloatArray(256);
+    //2.获取数组指针
+    jfloat *arr = env->GetFloatArrayElements(jarr, NULL);
+    //3.赋值
+    auto *engine = reinterpret_cast<MusicBoxEngine *>(engine_handle);
+    if (engine) {
+        engine->readWaveformData(arr);
+    } else {
+        LOGE("Engine handle is invalid, call createEngine() to create a new one");
+    }
+    //4.释放资源
+    env->ReleaseFloatArrayElements(jarr, arr, 0);
+    //5.返回数组
+    return jarr;
 }

@@ -27,6 +27,8 @@ import com.pdrogfer.mididroid.util.MidiProcessor;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Timer;
+import java.util.TimerTask;
 
 
 public class MainActivity extends AppCompatActivity {
@@ -47,6 +49,8 @@ public class MainActivity extends AppCompatActivity {
     private native void noteOn(long engineHandle, int note);
 
     private static native void native_setDefaultStreamValues(int sampleRate, int framesPerBurst);
+
+    private native float[] getWaveformData(long engineHandle);
 
     // Used to load the 'native-lib' library on application startup.
     static {
@@ -86,6 +90,7 @@ public class MainActivity extends AppCompatActivity {
                         public void run() {
                             final TextView tvNoteNum = findViewById(R.id.tvNoteNum);
                             tvNoteNum.setText(String.format("N: %d", noteTranspose));
+
                         }
                     });
                 }
@@ -221,8 +226,8 @@ public class MainActivity extends AppCompatActivity {
         });
 
         LineGraphView mLineGraphView = (LineGraphView) findViewById(R.id.lineGraphView);
-        float[] aaa = new float[128];
-        mLineGraphView.setValueArray(aaa);
+        mLineGraphView.setBackColor(getResources().getColor(R.color.colorPrimaryDark));
+        mLineGraphView.setExtraText("Time Domain");
 
         tv.setText(stringFromJNI());
         setDefaultStreamValues(this);
@@ -230,7 +235,26 @@ public class MainActivity extends AppCompatActivity {
         Intent intent = new Intent(MainActivity.this, FileListActivity.class);
         startActivityForResult(intent, 0);//此处的requestCode应与下面结果处理函中调用的requestCode一致
 
+        Timer timer = new Timer();
 
+
+        TimerTask task = new TimerTask() {
+
+            @Override
+            public void run() {
+                // TODO Auto-generated method stub
+                runOnUiThread(new Runnable() {
+
+                    @Override
+                    public void run() {
+                        LineGraphView mLineGraphView = (LineGraphView) findViewById(R.id.lineGraphView);
+                        mLineGraphView.setValueArray(getWaveformData(mEngineHandle));
+                    }
+                });
+            }
+        };
+
+        timer.schedule(task, 0, 20);
     }
 
     //结果处理函数，当从secondActivity中返回时调用此函数

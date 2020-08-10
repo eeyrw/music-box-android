@@ -1,4 +1,5 @@
 #include <memory>
+#include <cstring>
 #include "MusicBoxEngine.h"
 #include "WaveTableSynthesizerSource.h"
 
@@ -40,6 +41,10 @@ void MusicBoxEngine::noteOn(uint8_t note) {
 
 void MusicBoxEngine::restart() {
     start();
+}
+
+void MusicBoxEngine::readWaveformData(const float *data) {
+    memcpy((void *) data, mAudioSource->waveformData, 256 * sizeof(float));
 }
 
 // Create the playback stream

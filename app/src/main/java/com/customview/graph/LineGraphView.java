@@ -206,7 +206,7 @@ public class LineGraphView extends SurfaceView implements
                                         / 2f;
                                 j += 4;
                             }
-                            linePaint.setStrokeWidth(2f);
+                            linePaint.setStrokeWidth(2.5f);
                             canvas.drawLines(points, linePaint);
                         }
                     }

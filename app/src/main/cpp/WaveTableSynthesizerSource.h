@@ -8,6 +8,9 @@
 
 class WaveTableSynthesizerSource : public IRenderableAudio {
 public:
+    float waveformData[256];
+    int waveformDataPtr = 0;
+
     WaveTableSynthesizerSource(int32_t sampleRate, int32_t channelCount) {
         mChannelCount = channelCount;
         mSampleRate = sampleRate;
@@ -31,7 +34,17 @@ public:
             Player32kProc(&player);
             audioData[i] = (float) (player.mainSynthesizer.mixOut >> 8) / (float) 32768 * 0.5;
             PlayerProcess(&player);
+            if (i % 4 == 0) {
+                if (waveformDataPtr < sizeof(waveformData)) {
+                    waveformData[waveformDataPtr] = audioData[i];
+                    waveformDataPtr++;
+                } else {
+                    waveformDataPtr = 0;
+                }
+            }
+
         }
+
 
         constexpr int kChannelCountStereo = 2;
         // We assume that audioData has sufficient frames to hold the stereo output, so copy each
