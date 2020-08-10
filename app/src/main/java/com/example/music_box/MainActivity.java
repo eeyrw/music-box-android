@@ -78,14 +78,14 @@ public class MainActivity extends AppCompatActivity {
             int velocity = ev.getVelocity();
             int channel = ev.getChannel();
             if (velocity != 0 && channel != 9) {
-                final int noteTranpose = note + transposeValue;
-                if (noteTranpose >= 0 && noteTranpose <= 127) {
-                    noteOn(mEngineHandle, noteTranpose);
-                    Log.d(TAG, String.format("onMidiEvent: %d", noteTranpose));
+                final int noteTranspose = note + transposeValue;
+                if (noteTranspose >= 0 && noteTranspose <= 127) {
+                    noteOn(mEngineHandle, noteTranspose);
+                    Log.d(TAG, String.format("onMidiEvent: %d", noteTranspose));
                     runOnUiThread(new Runnable() {
                         public void run() {
                             final TextView tvNoteNum = findViewById(R.id.tvNoteNum);
-                            tvNoteNum.setText(String.format("N: %d", noteTranpose));
+                            tvNoteNum.setText(String.format("N: %d", noteTranspose));
                         }
                     });
                 }
