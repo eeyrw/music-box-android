@@ -37,7 +37,7 @@ public class MainActivity extends AppCompatActivity {
     private String midiFilePath;
     private MidiProcessor processor;
     private int transposeValue = 0;
-
+    private Timer timer;
     private native long createEngine(int[] cpuIds);
 
     private native void deleteEngine(long engineHandle);
@@ -235,7 +235,7 @@ public class MainActivity extends AppCompatActivity {
         Intent intent = new Intent(MainActivity.this, FileListActivity.class);
         startActivityForResult(intent, 0);//此处的requestCode应与下面结果处理函中调用的requestCode一致
 
-        Timer timer = new Timer();
+        timer = new Timer();
 
 
         TimerTask task = new TimerTask() {
@@ -254,7 +254,7 @@ public class MainActivity extends AppCompatActivity {
             }
         };
 
-        timer.schedule(task, 0, 20);
+        timer.schedule(task, 0, 50);
     }
 
     //结果处理函数，当从secondActivity中返回时调用此函数
