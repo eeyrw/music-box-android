@@ -1,4 +1,4 @@
-package com.example.music_box;
+package com.yuan.music_box;
 
 import androidx.appcompat.app.AppCompatActivity;
 

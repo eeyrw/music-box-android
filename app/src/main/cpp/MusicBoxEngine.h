@@ -19,8 +19,6 @@ public:
 
     virtual ~MusicBoxEngine() = default;
 
-    void tap(bool isDown);
-
     void noteOn(uint8_t note);
 
     void pause(bool isPause);

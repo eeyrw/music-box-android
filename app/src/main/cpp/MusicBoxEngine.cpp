@@ -20,17 +20,11 @@ MusicBoxEngine::MusicBoxEngine(std::vector<int> cpuIds) {
     start();
 }
 
-void MusicBoxEngine::tap(bool isDown) {
-    mAudioSource->tap(isDown);
-    if (isDown)
-        mStream->start();
-    else
-        mStream->stop();
-}
-
 void MusicBoxEngine::pause(bool isPause) {
-    if (isPause)
+    if (isPause) {
         mStream->pause();
+        mAudioSource->resetSynthesizer();
+    }
     else
         mStream->start();
 }
@@ -78,7 +72,6 @@ void MusicBoxEngine::start() {
         mAudioSource = std::make_shared<WaveTableSynthesizerSource>(mStream->getSampleRate(),
                                                                     mStream->getChannelCount());
         mCallback->setSource(std::dynamic_pointer_cast<IRenderableAudio>(mAudioSource));
-        // mStream->start();
     } else {
         LOGE("Failed to create the playback stream. Error: %s", convertToText(result));
     }

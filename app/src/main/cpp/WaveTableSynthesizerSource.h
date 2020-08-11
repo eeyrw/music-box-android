@@ -17,16 +17,13 @@ public:
         PlayerInit(&player);
     }
 
-    void tap(bool isOn) {
-        if (isOn)
-            PlayerPlay(&player);
-        else
-            PlayerInit(&player);
-    };
-
     void noteOn(uint8_t note) {
         NoteOn(&player.mainSynthesizer, note);
     };
+
+    void resetSynthesizer() {
+        PlayerResetSynthesizer(&player);
+    }
 
     // From IRenderableAudio
     void renderAudio(float *audioData, int32_t numFrames) override {

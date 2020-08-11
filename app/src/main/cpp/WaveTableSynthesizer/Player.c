@@ -75,12 +75,15 @@ void PlayerPlay(Player *player)
     player->status = STATUS_PLAYING;
 }
 
-void PlayerInit(Player *player)
-{
+void PlayerInit(Player *player) {
     player->status = STATUS_STOP;
     player->currentTick = 0;
     player->lastScoreTick = 0;
     player->decayGenTick = 0;
     player->scorePointer = Score;
+    SynthInit(&(player->mainSynthesizer));
+}
+
+void PlayerResetSynthesizer(Player *player) {
     SynthInit(&(player->mainSynthesizer));
 }
