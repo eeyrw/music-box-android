@@ -49,7 +49,7 @@ oboe::Result MusicBoxEngine::createPlaybackStream() {
             ->setFormat(oboe::AudioFormat::Float)
             ->setCallback(mCallback.get())
             ->setSampleRate(32000)
-            ->setFramesPerCallback(128)
+            ->setFramesPerCallback(512)
             ->openManagedStream(mStream);
 }
 
