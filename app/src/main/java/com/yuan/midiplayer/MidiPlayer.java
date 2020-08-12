@@ -17,134 +17,44 @@ import java.nio.channels.AsynchronousServerSocketChannel;
 import java.util.concurrent.LinkedBlockingQueue;
 
 
-public class MidiPlayer {
+public class MidiPlayer extends Player {
+    private final String TAG = com.yuan.music_box.MainActivity.class.toString();
+    public MusicBoxEngine mEngine;
+    private MidiProcessor mProcessor;
+    private String midiFilePath;
+    private int mTransposeValue = 0;
+
+    public MidiPlayer() {
+        super();
+        mEngine = new MusicBoxEngine();
+    }
+
     public void setTranspose(int transposeValue) {
         mTransposeValue = transposeValue;
     }
 
-    public enum PlayerState {
-        STOP, READY_TO_PLAY, PLAYING, READY_TO_PAUSE, PAUSE, READY_TO_STOP, READY_TO_PLAY_OR_PAUSE
-    }
-
-    public enum UIMessage {PLAY_KEY, STOP_KEY, PAUSE_KEY, PLAY_OR_PAUSE_KEY}
-
-    ;
-
-    public MidiPlayer() {
-        mUIMessageQueue = new LinkedBlockingQueue<UIMessage>();
-        mState = PlayerState.STOP;
-        mThread = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    while (true)
-                        processState();
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-            }
-        });
-        mThread.start();
-        mEngine = new MusicBoxEngine();
-    }
-
-    private final String TAG = com.yuan.music_box.MainActivity.class.toString();
-    private PlayerState mState;
-    private PlayerState mLastState;
-    private LinkedBlockingQueue<UIMessage> mUIMessageQueue;
-    private Thread mThread;
-    private MidiProcessor mProcessor;
-    public MusicBoxEngine mEngine;
-    private String midiFilePath;
-    private int mTransposeValue = 0;
-
-    private void internalPlay() {
+    @Override
+    protected void internalPlay() {
         mProcessor.start();
         mEngine.pause(false);
     }
 
-    private void internalPause() {
+    @Override
+    protected void internalPause() {
         mProcessor.stop();
         mEngine.pause(true);
     }
 
-    private void internalResume() {
+    @Override
+    protected void internalResume() {
         mProcessor.start();
         mEngine.pause(false);
     }
 
-    private void internalStop() {
+    @Override
+    protected void internalStop() {
         mProcessor.reset();
         mEngine.pause(true);
-    }
-
-    private void processState() throws InterruptedException {
-        UIMessage currentMessage = mUIMessageQueue.take();
-        Log.d(TAG, "processState: New Messege " + currentMessage.toString());
-        switch (mState) {
-            case STOP:
-                if (currentMessage == UIMessage.PLAY_KEY || currentMessage == UIMessage.PLAY_OR_PAUSE_KEY) {
-                    internalPlay();
-                    updateState(PlayerState.PLAYING);
-                }
-                break;
-            case PLAYING:
-                if (currentMessage == UIMessage.PAUSE_KEY || currentMessage == UIMessage.PLAY_OR_PAUSE_KEY) {
-                    internalPause();
-                    updateState(PlayerState.PAUSE);
-                } else if (currentMessage == UIMessage.STOP_KEY) {
-                    internalStop();
-                    updateState(PlayerState.STOP);
-                }
-                break;
-            case PAUSE:
-                if (currentMessage == UIMessage.PLAY_KEY || currentMessage == UIMessage.PLAY_OR_PAUSE_KEY) {
-                    internalResume();
-                    updateState(PlayerState.PLAYING);
-                } else if (currentMessage == UIMessage.STOP_KEY) {
-                    internalStop();
-                    updateState(PlayerState.STOP);
-                }
-                break;
-        }
-    }
-
-
-    private void updateState(PlayerState state) {
-        mLastState = mState;
-        mState = state;
-    }
-
-    public void playOrPause() {
-        try {
-            mUIMessageQueue.put(UIMessage.PLAY_OR_PAUSE_KEY);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-    }
-
-    public void play() {
-        try {
-            mUIMessageQueue.put(UIMessage.PLAY_KEY);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-    }
-
-    public void stop() {
-        try {
-            mUIMessageQueue.put(UIMessage.STOP_KEY);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-    }
-
-    public void pause() {
-        try {
-            mUIMessageQueue.put(UIMessage.PAUSE_KEY);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
     }
 
     public void playMidiFile(InputStream input) {
@@ -156,8 +66,8 @@ public class MidiPlayer {
             MidiEventPlayer ep = new MidiEventPlayer("sd");
             mProcessor = new MidiProcessor(midi);
             mProcessor.registerEventListener(ep, NoteOn.class);
-            play();
-// Start the processor:
+            // play();
+            // Start the processor:
         } catch (IOException e) {
             System.err.println(e);
         }

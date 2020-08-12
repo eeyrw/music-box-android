@@ -167,13 +167,13 @@ public class LineGraphView extends SurfaceView implements
 
             while (mDrawThreadFlag) {
 
-//				synchronized (token) {
-//					try {
-//						 token.wait();
-//					} catch (InterruptedException e) {
-//						e.printStackTrace();
-//					}
-//				}
+                synchronized (token) {
+                    try {
+                        token.wait();
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
 
                 try {
                     if (mValueArray != null) {

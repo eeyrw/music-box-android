@@ -19,17 +19,27 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
 
+        <com.customview.graph.LineGraphView
+            android:id="@+id/lineGraphView"
+            android:layout_width="match_parent"
+            android:layout_height="197dp"
+            android:layout_weight="1" />
+
         <TextView
             android:id="@+id/tvPlayStatus"
             android:layout_width="match_parent"
-            android:layout_height="54dp"
-            android:layout_marginBottom="10sp"
-            android:text="Stop"
-            android:textSize="36sp" />
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_margin="6sp"
+            android:layout_weight="1"
+            android:text="STATUS: STOP"
+            android:textSize="24sp" />
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_margin="6sp"
+            android:layout_weight="1"
             android:orientation="horizontal">
 
             <Button
@@ -55,32 +65,38 @@
 
         </LinearLayout>
 
-        <LinearLayout
-            android:id="@+id/linearLayout3"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:orientation="horizontal">
-
-        </LinearLayout>
 
         <TextView
             android:id="@+id/tvFileName"
             android:layout_width="match_parent"
-            android:layout_height="51dp"
-            android:text="Hello World!"
+            android:layout_height="wrap_content"
+            android:layout_margin="6sp"
+            android:layout_weight="1"
+            android:text="No midi file chosen."
             android:textSize="18sp" />
 
         <Button
-            android:id="@+id/btnChooseMidi"
+            android:id="@+id/btnChooseSampleMidi"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_margin="6sp"
+            android:layout_weight="1"
+            android:text="Choose sample midi" />
+
+        <Button
+            android:id="@+id/btnChooseMIdi"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_margin="6sp"
+            android:layout_weight="1"
             android:text="Choose midi file" />
 
         <TextView
             android:id="@+id/tvTransposeValue"
             android:layout_width="match_parent"
-            android:layout_height="35dp"
+            android:layout_height="wrap_content"
+            android:layout_margin="6sp"
+            android:layout_weight="1"
             android:text="Transpose: 0 half-tone"
             android:textSize="18sp" />
 
@@ -88,15 +104,17 @@
             android:id="@+id/sbTranspose"
             style="@style/Widget.AppCompat.SeekBar.Discrete"
             android:layout_width="match_parent"
-            android:layout_height="59dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="6sp"
+            android:layout_marginLeft="6sp"
+            android:layout_marginTop="6sp"
+            android:layout_marginEnd="6sp"
+            android:layout_marginRight="6sp"
+            android:layout_marginBottom="20sp"
+            android:layout_weight="1"
             android:indeterminate="false"
             android:max="48"
             android:progress="24" />
-
-        <com.customview.graph.LineGraphView
-            android:id="@+id/lineGraphView"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent" />
 
     </LinearLayout>
 

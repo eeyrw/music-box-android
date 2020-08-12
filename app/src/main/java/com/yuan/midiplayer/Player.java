@@ -1,12 +1,6 @@
 package com.yuan.midiplayer;
 
 import android.util.Log;
-
-
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.nio.channels.AsynchronousServerSocketChannel;
 import java.util.concurrent.LinkedBlockingQueue;
 
 
@@ -97,14 +91,6 @@ public class Player {
     private void updateState(PlayerState state) {
         mLastState = mState;
         mState = state;
-    }
-
-    public void playOrPause() {
-        try {
-            mUIMessageQueue.put(UIMessage.PLAY_OR_PAUSE_KEY);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
     }
 
     public void play() {
