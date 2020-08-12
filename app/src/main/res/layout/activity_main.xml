@@ -22,7 +22,7 @@
         <com.customview.graph.LineGraphView
             android:id="@+id/lineGraphView"
             android:layout_width="match_parent"
-            android:layout_height="197dp"
+            android:layout_height="180dp"
             android:layout_weight="1" />
 
         <TextView
@@ -67,6 +67,31 @@
 
 
         <TextView
+            android:id="@+id/tvTransposeValue"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_margin="6sp"
+            android:layout_weight="1"
+            android:text="Transpose: 0 half-tone"
+            android:textSize="18sp" />
+
+        <SeekBar
+            android:id="@+id/sbTranspose"
+            style="@style/Widget.AppCompat.SeekBar.Discrete"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="6sp"
+            android:layout_marginLeft="6sp"
+            android:layout_marginTop="6sp"
+            android:layout_marginEnd="6sp"
+            android:layout_marginRight="6sp"
+            android:layout_marginBottom="6sp"
+            android:layout_weight="1"
+            android:indeterminate="false"
+            android:max="48"
+            android:progress="24" />
+
+        <TextView
             android:id="@+id/tvFileName"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -87,24 +112,6 @@
             android:id="@+id/btnChooseMIdi"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_margin="6sp"
-            android:layout_weight="1"
-            android:text="Choose midi file" />
-
-        <TextView
-            android:id="@+id/tvTransposeValue"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_margin="6sp"
-            android:layout_weight="1"
-            android:text="Transpose: 0 half-tone"
-            android:textSize="18sp" />
-
-        <SeekBar
-            android:id="@+id/sbTranspose"
-            style="@style/Widget.AppCompat.SeekBar.Discrete"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
             android:layout_marginStart="6sp"
             android:layout_marginLeft="6sp"
             android:layout_marginTop="6sp"
@@ -112,9 +119,7 @@
             android:layout_marginRight="6sp"
             android:layout_marginBottom="20sp"
             android:layout_weight="1"
-            android:indeterminate="false"
-            android:max="48"
-            android:progress="24" />
+            android:text="Choose midi file" />
 
     </LinearLayout>
 

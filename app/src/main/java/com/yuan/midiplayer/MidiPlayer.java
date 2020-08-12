@@ -66,7 +66,7 @@ public class MidiPlayer extends Player {
             MidiEventPlayer ep = new MidiEventPlayer("sd");
             mProcessor = new MidiProcessor(midi);
             mProcessor.registerEventListener(ep, NoteOn.class);
-            // play();
+            play();
             // Start the processor:
         } catch (IOException e) {
             System.err.println(e);
