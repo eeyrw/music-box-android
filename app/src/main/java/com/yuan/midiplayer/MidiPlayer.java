@@ -59,6 +59,8 @@ public class MidiPlayer extends Player {
 
     public void playMidiFile(InputStream input) {
 
+        NoteListProcessor np = new NoteListProcessor(input);
+        np.analyzeNoteMapByCentroid();
         try {
             // File input = new File(midiFilePath);
             MidiFile midi = new MidiFile(input);

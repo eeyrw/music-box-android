@@ -1,7 +1,8 @@
-package com.company;
+package com.yuan.midiplayer;
 
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
+import android.util.Log;
+
+import java.io.InputStream;
 import java.util.*;
 
 public class NoteListProcessor {
@@ -13,28 +14,27 @@ public class NoteListProcessor {
     public int recommLowestPitch = 45;
     public int suggestTranpose;
     public int offestToMidiPitch = 0;
-    public HashMap<Integer, Integer> noteOccurTimesMap;
+    public HashMap<Integer, Integer> noteOccurTimesMap = new HashMap<>();
     public int centroidPitch = 0;
+    private final String TAG = com.yuan.music_box.MainActivity.class.toString();
 
-    private HashMap<Integer, ArrayList<Integer>> tickNoteMap;
-    private HashMap<Integer, ArrayList<Integer>> tickNoteMapTransposed;
+    private HashMap<Long, ArrayList<Integer>> tickNoteMap;
     private String pitchName[];
-    private OutputStreamWriter defaultOutput;
 
 
-    public NoteListProcessor(String midifilePath, OutputStream outputStream) {
-        defaultOutput = new OutputStreamWriter(outputStream);
-/*        MidiHelper helper = MidiHelper(midifilePath);
-
-        helper.getTickNoteMap(tickNoteMap);*/
+    public NoteListProcessor(InputStream midiInputStream) {
+        MidiHelper helper = new MidiHelper(midiInputStream);
+        tickNoteMap = helper.getTickNoteMap();
         InitPitchName();
     }
+
 
     private void InitPitchName() {
         String pitchInOneOctave[] = new String[]{
                 "C", "C#", "D", "Eb", "E", "F", "F#", "G", "Ab", "A", "Bb", "B"
         };
 
+        pitchName = new String[129];
         // Midi pitch 12=C0,108=C8
         for (int i = 0; i != 127; ++i) {
             int octaveGroup = (i - 12) / 12;
@@ -45,31 +45,10 @@ public class NoteListProcessor {
     }
 
     private void printAnalyzeResult() {
-/*        ( * defaultOutput) <<"Song duration: " << midiDuration << " s" << endl;
-        ( * defaultOutput) <<"Note pitch v.s. occur times table: " << endl;
-        TablePrinter tp (defaultOutput);
-        tp.AddColumn("Note pitch", 12);
-        tp.AddColumn("Occur times", 12);
-        tp.AddColumn("Is in range", 12);
-        tp.PrintHeader();
-        for (auto & noteNumMapItem :noteOccurTimesMap)
-        {
-            tp << pitchName[noteNumMapItem.first] << noteNumMapItem.second;
-            int offestToVailidHighestPitch = validHighestPitch - noteNumMapItem.first;
-            int offestToVailidLowestPitch = validLowestPitch - noteNumMapItem.first;
-
-            if (offestToVailidHighestPitch >= 0 && offestToVailidLowestPitch <= 0)
-                tp << "YES";
-            else
-                tp << "NO";
-        }
-        tp.PrintFooter();
-        ( * defaultOutput) <<"Highest pitch: " << pitchName[highestPitch] << endl
-                << "Lowest pitch: " << pitchName[lowestPitch] << endl;
-        ( * defaultOutput) <<"Centroid pitch: " << pitchName[centroidPitch] << endl;
-        ( * defaultOutput) <<"Transpose suggestion: " << suggestTranpose << " half note" << endl;
-        if (useExternTransposeParam)
-            ( * defaultOutput) <<"External transpose: " << externTransposeParam << " half note" << endl;*/
+        Log.d(TAG, String.format("Highest pitch: %s", pitchName[highestPitch]));
+        Log.d(TAG, String.format("Lowest pitch: %s", pitchName[lowestPitch]));
+        Log.d(TAG, String.format("Centroid pitch: %s", pitchName[centroidPitch]));
+        Log.d(TAG, String.format("Transpose suggestion: %d half-tone(s)", suggestTranpose));
     }
 
     void analyzeNoteMapByCentroid() {
@@ -79,8 +58,8 @@ public class NoteListProcessor {
             });
         });
 
-        lowestPitch = Collections.max(noteOccurTimesMap.keySet());
-        highestPitch = Collections.min(noteOccurTimesMap.keySet());
+        lowestPitch = Collections.min(noteOccurTimesMap.keySet());
+        highestPitch = Collections.max(noteOccurTimesMap.keySet());
 
         int centroidSum1 = 0;
         int centroidSum2 = 0;
