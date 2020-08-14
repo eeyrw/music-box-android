@@ -104,6 +104,8 @@ public class MidiPlayer extends Player {
             // File input = new File(midiFilePath);
             MidiFile midi = new MidiFile(input);
             NoteListProcessor np = new NoteListProcessor(midi);
+            np.recommHighestPitch = 72; //C5 in midi number
+            np.recommLowestPitch = 72; //C5 in midi number
             np.analyzeNoteMapByCentroid();
             mListener.onSuggestTransposeChange(np.suggestTranpose);
             mTransposeValue = np.suggestTranpose;
