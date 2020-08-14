@@ -19,6 +19,8 @@ public:
 
     virtual ~MusicBoxEngine() = default;
 
+    void resetSynthesizer();
+
     void noteOn(uint8_t note);
 
     void pause(bool isPause);

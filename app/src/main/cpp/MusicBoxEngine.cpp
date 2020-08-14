@@ -23,10 +23,12 @@ MusicBoxEngine::MusicBoxEngine(std::vector<int> cpuIds) {
 void MusicBoxEngine::pause(bool isPause) {
     if (isPause) {
         mStream->pause();
-        mAudioSource->resetSynthesizer();
-    }
-    else
+    } else
         mStream->start();
+}
+
+void MusicBoxEngine::resetSynthesizer() {
+    mAudioSource->resetSynthesizer();
 }
 
 void MusicBoxEngine::noteOn(uint8_t note) {

@@ -13,6 +13,8 @@ public class MusicBoxEngine {
 
     private static native void nativePause(long engineHandle, boolean isPause);
 
+    private static native void nativeResetSynthesizer(long engineHandle);
+
     private static native void nativeNoteOn(long engineHandle, int note);
 
     private static native void nativeSetDefaultStreamValues(int sampleRate, int framesPerBurst);
@@ -36,6 +38,11 @@ public class MusicBoxEngine {
     public void pause(boolean isPause) {
         if (mEngineHandle != 0)
             nativePause(mEngineHandle, isPause);
+    }
+
+    public void resetSynthesizer() {
+        if (mEngineHandle != 0)
+            nativeResetSynthesizer(mEngineHandle);
     }
 
     public void releaseResource() {

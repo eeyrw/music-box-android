@@ -1,6 +1,7 @@
 package com.yuan.midiplayer;
 
 import android.util.Log;
+
 import java.util.concurrent.LinkedBlockingQueue;
 
 
@@ -14,8 +15,9 @@ public class Player {
 
     ;
 
-    public Player() {
-		mRunning = true;
+    public Player(PlayerEventListener listener) {
+        mListener = listener;
+        mRunning = true;
         mUIMessageQueue = new LinkedBlockingQueue<UIMessage>();
         mState = PlayerState.STOP;
         mThread = new Thread(new Runnable() {
@@ -37,7 +39,8 @@ public class Player {
     private PlayerState mLastState;
     private LinkedBlockingQueue<UIMessage> mUIMessageQueue;
     private Thread mThread;
-	private boolean mRunning;
+    private boolean mRunning;
+    private PlayerEventListener mListener;
 
 
     protected void internalPlay() {
@@ -91,6 +94,8 @@ public class Player {
     private void updateState(PlayerState state) {
         mLastState = mState;
         mState = state;
+        if (mLastState != mState)
+            mListener.onPlayStateChange(mState);
     }
 
     public void play() {

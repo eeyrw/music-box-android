@@ -2,6 +2,8 @@ package com.yuan.midiplayer;
 
 import android.util.Log;
 
+import com.pdrogfer.mididroid.MidiFile;
+
 import java.io.InputStream;
 import java.util.*;
 
@@ -22,8 +24,8 @@ public class NoteListProcessor {
     private String pitchName[];
 
 
-    public NoteListProcessor(InputStream midiInputStream) {
-        MidiHelper helper = new MidiHelper(midiInputStream);
+    public NoteListProcessor(MidiFile midi) {
+        MidiHelper helper = new MidiHelper(midi);
         tickNoteMap = helper.getTickNoteMap();
         InitPitchName();
     }
@@ -52,11 +54,17 @@ public class NoteListProcessor {
     }
 
     void analyzeNoteMapByCentroid() {
-        tickNoteMap.forEach((tick, noteList) -> {
-            noteList.forEach(note -> {
-                noteOccurTimesMap.merge(note, 1, (k, v) -> v + 1);
-            });
-        });
+
+        for (Map.Entry<Long, ArrayList<Integer>> entry : tickNoteMap.entrySet()) {
+            ArrayList<Integer> noteList = entry.getValue();
+            for (Integer note : noteList) {
+                if (noteOccurTimesMap.containsKey(note)) {
+                    noteOccurTimesMap.put(note, noteOccurTimesMap.get(note) + 1);
+                } else {
+                    noteOccurTimesMap.put(note, 1);
+                }
+            }
+        }
 
         lowestPitch = Collections.min(noteOccurTimesMap.keySet());
         highestPitch = Collections.max(noteOccurTimesMap.keySet());

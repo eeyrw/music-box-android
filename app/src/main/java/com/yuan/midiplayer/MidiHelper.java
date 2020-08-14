@@ -32,12 +32,8 @@ public class MidiHelper {
 
     private MetronomeTick mMetronome;
 
-    public MidiHelper(InputStream input) {
-        try {
-            mMidiFile = new MidiFile(input);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+    public MidiHelper(MidiFile midiFile) {
+        mMidiFile = midiFile;
         mMPQN = Tempo.DEFAULT_MPQN;
         mPPQ = mMidiFile.getResolution();
 
@@ -74,10 +70,13 @@ public class MidiHelper {
             int channel = ((NoteOn) event).getChannel();
             int velocity = ((NoteOn) event).getVelocity();
             if (channel != 0x09 && velocity != 0) {
-                ArrayList<Integer> list = tickNoteMap.computeIfAbsent(Long.valueOf(tick), k -> new ArrayList<Integer>() {{
-                    add(note);
-                }});
-                list.add(note);
+                if (tickNoteMap.containsKey(Long.valueOf(tick))) {
+                    tickNoteMap.get(Long.valueOf(tick)).add(note);
+                } else {
+                    tickNoteMap.put(Long.valueOf(tick), new ArrayList<Integer>() {{
+                        add(note);
+                    }});
+                }
             }
         }
 

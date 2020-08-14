@@ -25,6 +25,8 @@ import android.widget.Toast;
 
 import com.customview.graph.LineGraphView;
 import com.yuan.midiplayer.MidiPlayer;
+import com.yuan.midiplayer.MidiPlayerEventListener;
+import com.yuan.midiplayer.Player;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -39,8 +41,6 @@ import java.util.TimerTask;
 
 public class MainActivity extends AppCompatActivity {
     private final String TAG = com.yuan.music_box.MainActivity.class.toString();
-
-    private Timer timer;
     private MidiPlayer midiPlayer;
     private String midiFilePath;
 
@@ -57,7 +57,6 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 midiPlayer.stop();
-                tvPlayStatus.setText("Stop");
             }
         });
 
@@ -66,7 +65,6 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 midiPlayer.pause();
-                tvPlayStatus.setText("Pause");
             }
         });
 
@@ -75,7 +73,6 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 midiPlayer.play();
-                tvPlayStatus.setText("Playing...");
             }
         });
 
@@ -128,26 +125,43 @@ public class MainActivity extends AppCompatActivity {
         Intent intent = new Intent(MainActivity.this, FileListActivity.class);
         startActivityForResult(intent, 0);//此处的requestCode应与下面结果处理函中调用的requestCode一致
 
-        timer = new Timer();
-        midiPlayer = new MidiPlayer();
-
-        TimerTask task = new TimerTask() {
-
+        midiPlayer = new MidiPlayer(new MidiPlayerEventListener() {
             @Override
-            public void run() {
-                // TODO Auto-generated method stub
+            public void onPlayStateChange(Player.PlayerState state) {
                 runOnUiThread(new Runnable() {
-
                     @Override
                     public void run() {
-                        LineGraphView mLineGraphView = (LineGraphView) findViewById(R.id.lineGraphView);
-                        mLineGraphView.setValueArray(midiPlayer.mEngine.getWaveformData());
+                        tvPlayStatus.setText(state.toString());
                     }
                 });
             }
-        };
 
-        timer.schedule(task, 0, 50);
+            @Override
+            public void onSuggestTransposeChange(int transpose) {
+
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        int progress = transpose + 24;
+                        SeekBar sbTranspose = findViewById(R.id.sbTranspose);
+                        sbTranspose.setProgress(progress);
+                        TextView tvTransposeValue = findViewById(R.id.tvTransposeValue);
+                        tvTransposeValue.setText(String.format("Transpose suggestion: %d half-tone", transpose));
+                    }
+                });
+            }
+
+            @Override
+            public void onWaveformChange(float[] waveform) {
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        LineGraphView mLineGraphView = (LineGraphView) findViewById(R.id.lineGraphView);
+                        mLineGraphView.setValueArray(waveform);
+                    }
+                });
+            }
+        });
     }
 
     //结果处理函数，当从secondActivity中返回时调用此函数
@@ -185,6 +199,7 @@ public class MainActivity extends AppCompatActivity {
 
         }
     }
+
     @Override
     protected void onResume() {
         Log.d(TAG, "onResume");
@@ -208,7 +223,6 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public void onBackPressed() {
         Log.d(TAG, "onBackPressed");
-        timer.cancel();
         midiPlayer.releaseResource();
         super.onBackPressed();
     }

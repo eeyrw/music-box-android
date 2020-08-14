@@ -109,4 +109,14 @@ Java_com_yuan_midiplayer_MusicBoxEngine_nativeGetWaveformData(JNIEnv *env, jclas
     env->ReleaseFloatArrayElements(jarr, arr, 0);
     //5.返回数组
     return jarr;
+}extern "C"
+JNIEXPORT void JNICALL
+Java_com_yuan_midiplayer_MusicBoxEngine_nativeResetSynthesizer(JNIEnv *env, jclass clazz,
+                                                               jlong engine_handle) {
+    auto *engine = reinterpret_cast<MusicBoxEngine *>(engine_handle);
+    if (engine) {
+        engine->resetSynthesizer();
+    } else {
+        LOGE("Engine handle is invalid, call createEngine() to create a new one");
+    }
 }
