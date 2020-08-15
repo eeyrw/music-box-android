@@ -8,10 +8,10 @@ import java.util.concurrent.LinkedBlockingQueue;
 public class Player {
 
     public enum PlayerState {
-        STOP, PLAYING, PAUSE
+        STOP, PLAYING, PAUSE, PAUSE_BY_OS,
     }
 
-    public enum UIMessage {PLAY_KEY, STOP_KEY, PAUSE_KEY}
+    public enum UIMessage {PLAY_KEY, STOP_KEY, PAUSE_KEY, GO_TO_BACK, RETURN_FROM_BACK}
 
     ;
 
@@ -76,10 +76,22 @@ public class Player {
                 } else if (currentMessage == UIMessage.STOP_KEY) {
                     internalStop();
                     updateState(PlayerState.STOP);
+                } else if (currentMessage == UIMessage.GO_TO_BACK) {
+                    internalPause();
+                    updateState(PlayerState.PAUSE_BY_OS);
                 }
                 break;
             case PAUSE:
                 if (currentMessage == UIMessage.PLAY_KEY) {
+                    internalResume();
+                    updateState(PlayerState.PLAYING);
+                } else if (currentMessage == UIMessage.STOP_KEY) {
+                    internalStop();
+                    updateState(PlayerState.STOP);
+                }
+                break;
+            case PAUSE_BY_OS:
+                if (currentMessage == UIMessage.PLAY_KEY || currentMessage == UIMessage.RETURN_FROM_BACK) {
                     internalResume();
                     updateState(PlayerState.PLAYING);
                 } else if (currentMessage == UIMessage.STOP_KEY) {
@@ -117,6 +129,22 @@ public class Player {
     public void pause() {
         try {
             mUIMessageQueue.put(UIMessage.PAUSE_KEY);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void goToBack() {
+        try {
+            mUIMessageQueue.put(UIMessage.GO_TO_BACK);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void returnFromBack() {
+        try {
+            mUIMessageQueue.put(UIMessage.RETURN_FROM_BACK);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }

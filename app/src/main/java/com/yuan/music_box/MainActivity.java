@@ -204,6 +204,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onResume() {
         Log.d(TAG, "onResume");
         super.onResume();
+        midiPlayer.returnFromBack();
     }
 
 
@@ -211,19 +212,21 @@ public class MainActivity extends AppCompatActivity {
     protected void onPause() {
         Log.d(TAG, "onPause");
         super.onPause();
+        midiPlayer.goToBack();
     }
 
     @Override
     protected void onDestroy() {
         Log.d(TAG, "onDestroy");
         //  deleteEngine(mEngineHandle);
+        midiPlayer.releaseResource();
         super.onDestroy();
     }
 
     @Override
     public void onBackPressed() {
         Log.d(TAG, "onBackPressed");
-        midiPlayer.releaseResource();
+        // midiPlayer.releaseResource();
         super.onBackPressed();
     }
 

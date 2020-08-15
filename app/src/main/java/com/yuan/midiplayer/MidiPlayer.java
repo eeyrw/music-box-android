@@ -40,22 +40,28 @@ public class MidiPlayer extends Player {
 
     @Override
     protected void internalPlay() {
-        mProcessor.start();
-        mEngine.pause(false);
+        if (mProcessor != null)
+            mProcessor.start();
+        if (mEngine != null)
+            mEngine.pause(false);
         startInternalTimer();
     }
 
     @Override
     protected void internalPause() {
-        mProcessor.stop();
-        mEngine.pause(true);
+        if (mProcessor != null)
+            mProcessor.stop();
+        if (mEngine != null)
+            mEngine.pause(true);
         stopInternalTimer();
     }
 
     @Override
     protected void internalResume() {
-        mProcessor.start();
-        mEngine.pause(false);
+        if (mProcessor != null)
+            mProcessor.start();
+        if (mEngine != null)
+            mEngine.pause(false);
         startInternalTimer();
     }
 
