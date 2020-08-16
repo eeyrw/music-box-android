@@ -29,9 +29,9 @@
             android:id="@+id/tvPlayStatus"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_gravity="center_horizontal"
             android:layout_margin="6sp"
             android:layout_weight="1"
+            android:gravity="center_vertical"
             android:text="STATUS: STOP"
             android:textSize="24sp" />
 

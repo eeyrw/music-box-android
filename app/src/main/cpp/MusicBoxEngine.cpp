@@ -36,7 +36,9 @@ void MusicBoxEngine::noteOn(uint8_t note) {
 }
 
 void MusicBoxEngine::restart() {
+    LOGD("Restart the playback stream.");
     start();
+    mStream->start();
 }
 
 void MusicBoxEngine::readWaveformData(const float *data) {
