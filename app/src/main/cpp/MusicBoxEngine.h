@@ -19,7 +19,7 @@ public:
 
     virtual ~MusicBoxEngine() = default;
 
-    void tap(bool isDown);
+    void resetSynthesizer();
 
     void noteOn(uint8_t note);
 

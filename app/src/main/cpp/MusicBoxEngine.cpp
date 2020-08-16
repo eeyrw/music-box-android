@@ -20,19 +20,15 @@ MusicBoxEngine::MusicBoxEngine(std::vector<int> cpuIds) {
     start();
 }
 
-void MusicBoxEngine::tap(bool isDown) {
-    mAudioSource->tap(isDown);
-    if (isDown)
+void MusicBoxEngine::pause(bool isPause) {
+    if (isPause) {
+        mStream->pause();
+    } else
         mStream->start();
-    else
-        mStream->stop();
 }
 
-void MusicBoxEngine::pause(bool isPause) {
-    if (isPause)
-        mStream->pause();
-    else
-        mStream->start();
+void MusicBoxEngine::resetSynthesizer() {
+    mAudioSource->resetSynthesizer();
 }
 
 void MusicBoxEngine::noteOn(uint8_t note) {
@@ -40,7 +36,9 @@ void MusicBoxEngine::noteOn(uint8_t note) {
 }
 
 void MusicBoxEngine::restart() {
+    LOGD("Restart the playback stream.");
     start();
+    mStream->start();
 }
 
 void MusicBoxEngine::readWaveformData(const float *data) {
@@ -55,7 +53,7 @@ oboe::Result MusicBoxEngine::createPlaybackStream() {
             ->setFormat(oboe::AudioFormat::Float)
             ->setCallback(mCallback.get())
             ->setSampleRate(32000)
-            ->setFramesPerCallback(128)
+            ->setFramesPerCallback(512)
             ->openManagedStream(mStream);
 }
 
@@ -78,7 +76,6 @@ void MusicBoxEngine::start() {
         mAudioSource = std::make_shared<WaveTableSynthesizerSource>(mStream->getSampleRate(),
                                                                     mStream->getChannelCount());
         mCallback->setSource(std::dynamic_pointer_cast<IRenderableAudio>(mAudioSource));
-        // mStream->start();
     } else {
         LOGE("Failed to create the playback stream. Error: %s", convertToText(result));
     }

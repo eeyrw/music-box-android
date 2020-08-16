@@ -5,8 +5,8 @@
 
 
 extern "C" JNIEXPORT jstring JNICALL
-Java_com_example_music_1box_MainActivity_stringFromJNI(
-        JNIEnv* env,
+Java_com_yuan_midiplayer_MusicBoxEngine_stringFromJNI(
+        JNIEnv *env,
         jobject /* this */) {
 
 #if defined(__aarch64__) || defined(__x86_64__)
@@ -39,19 +39,19 @@ extern "C" {
  * @return a pointer to the audio engine. This should be passed to other methods
  */
 JNIEXPORT jlong JNICALL
-Java_com_example_music_1box_MainActivity_createEngine(JNIEnv *env, jobject /*unused*/,
-                                                                jintArray jCpuIds) {
+Java_com_yuan_midiplayer_MusicBoxEngine_createNativeEngine(JNIEnv *env, jclass clazz,
+                                                           jintArray jCpuIds) {
     std::vector<int> cpuIds = convertJavaArrayToVector(env, jCpuIds);
     LOGD("cpu ids size: %d", static_cast<int>(cpuIds.size()));
-    MusicBoxEngine  *engine = new MusicBoxEngine(std::move(cpuIds));
+    MusicBoxEngine *engine = new MusicBoxEngine(std::move(cpuIds));
     LOGD("Engine Started");
     return reinterpret_cast<jlong>(engine);
 }
 
 JNIEXPORT void JNICALL
-Java_com_example_music_1box_MainActivity_deleteEngine(JNIEnv *env, jobject instance,
-                                                               jlong jEngineHandle) {
-    auto engine = reinterpret_cast<MusicBoxEngine*>(jEngineHandle);
+Java_com_yuan_midiplayer_MusicBoxEngine_deleteNativeEngine(JNIEnv *env, jclass instance,
+                                                           jlong jEngineHandle) {
+    auto engine = reinterpret_cast<MusicBoxEngine *>(jEngineHandle);
     if (engine) {
         delete engine;
     } else {
@@ -59,24 +59,11 @@ Java_com_example_music_1box_MainActivity_deleteEngine(JNIEnv *env, jobject insta
     }
 }
 
-
 JNIEXPORT void JNICALL
-Java_com_example_music_1box_MainActivity_tap(JNIEnv *env, jobject instance,
-                                                        jlong jEngineHandle, jboolean isDown) {
-
-    auto *engine = reinterpret_cast<MusicBoxEngine*>(jEngineHandle);
-    if (engine) {
-        engine->tap(isDown);
-    } else {
-        LOGE("Engine handle is invalid, call createEngine() to create a new one");
-    }
-}
-
-JNIEXPORT void JNICALL
-Java_com_example_music_1box_MainActivity_native_1setDefaultStreamValues(JNIEnv *env,
-                                                                                   jclass type,
-                                                                                   jint sampleRate,
-                                                                                   jint framesPerBurst) {
+Java_com_yuan_midiplayer_MusicBoxEngine_nativeSetDefaultStreamValues(JNIEnv *env,
+                                                                     jclass type,
+                                                                     jint sampleRate,
+                                                                     jint framesPerBurst) {
     oboe::DefaultStreamValues::SampleRate = (int32_t) sampleRate;
     oboe::DefaultStreamValues::FramesPerBurst = (int32_t) framesPerBurst;
 }
@@ -85,8 +72,8 @@ Java_com_example_music_1box_MainActivity_native_1setDefaultStreamValues(JNIEnv *
 
 extern "C"
 JNIEXPORT void JNICALL
-Java_com_example_music_1box_MainActivity_noteOn(JNIEnv *env, jobject thiz, jlong engine_handle,
-                                                jint note) {
+Java_com_yuan_midiplayer_MusicBoxEngine_nativeNoteOn(JNIEnv *env, jclass thiz, jlong engine_handle,
+                                                     jint note) {
     auto *engine = reinterpret_cast<MusicBoxEngine *>(engine_handle);
     if (engine) {
         engine->noteOn(static_cast<uint8_t>(note));
@@ -95,8 +82,8 @@ Java_com_example_music_1box_MainActivity_noteOn(JNIEnv *env, jobject thiz, jlong
     }
 }extern "C"
 JNIEXPORT void JNICALL
-Java_com_example_music_1box_MainActivity_pause(JNIEnv *env, jobject thiz, jlong engine_handle,
-                                               jboolean is_pause) {
+Java_com_yuan_midiplayer_MusicBoxEngine_nativePause(JNIEnv *env, jclass thiz, jlong engine_handle,
+                                                    jboolean is_pause) {
     auto *engine = reinterpret_cast<MusicBoxEngine *>(engine_handle);
     if (engine) {
         engine->pause(static_cast<bool>(is_pause));
@@ -105,8 +92,8 @@ Java_com_example_music_1box_MainActivity_pause(JNIEnv *env, jobject thiz, jlong 
     }
 }extern "C"
 JNIEXPORT jfloatArray JNICALL
-Java_com_example_music_1box_MainActivity_getWaveformData(JNIEnv *env, jobject thiz,
-                                                         jlong engine_handle) {
+Java_com_yuan_midiplayer_MusicBoxEngine_nativeGetWaveformData(JNIEnv *env, jclass thiz,
+                                                              jlong engine_handle) {
     //1.新建长度len数组
     jfloatArray jarr = env->NewFloatArray(256);
     //2.获取数组指针
@@ -122,4 +109,14 @@ Java_com_example_music_1box_MainActivity_getWaveformData(JNIEnv *env, jobject th
     env->ReleaseFloatArrayElements(jarr, arr, 0);
     //5.返回数组
     return jarr;
+}extern "C"
+JNIEXPORT void JNICALL
+Java_com_yuan_midiplayer_MusicBoxEngine_nativeResetSynthesizer(JNIEnv *env, jclass clazz,
+                                                               jlong engine_handle) {
+    auto *engine = reinterpret_cast<MusicBoxEngine *>(engine_handle);
+    if (engine) {
+        engine->resetSynthesizer();
+    } else {
+        LOGE("Engine handle is invalid, call createEngine() to create a new one");
+    }
 }

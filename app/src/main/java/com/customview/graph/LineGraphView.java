@@ -63,10 +63,8 @@ public class LineGraphView extends SurfaceView implements
     }
 
     public LineGraphView(Context context, AttributeSet attrs) {
-
         super(context, attrs);
         initDefaultParam(context);
-
     }
 
     public synchronized void setValueArray(float[] array) {
@@ -81,7 +79,6 @@ public class LineGraphView extends SurfaceView implements
                                int height) {
         mSurfaceHeight = height;
         mSurfaceWidth = width;
-
     }
 
     @Override
@@ -89,13 +86,11 @@ public class LineGraphView extends SurfaceView implements
         mDrawThreadFlag = true;
         mSfUpdateThread = new SurfaceUpdateThread();
         mSfUpdateThread.start();
-
     }
 
     @Override
     public void surfaceDestroyed(SurfaceHolder arg0) {
         mDrawThreadFlag = false;
-
     }
 
     @Override
@@ -167,13 +162,13 @@ public class LineGraphView extends SurfaceView implements
 
             while (mDrawThreadFlag) {
 
-//				synchronized (token) {
-//					try {
-//						 token.wait();
-//					} catch (InterruptedException e) {
-//						e.printStackTrace();
-//					}
-//				}
+                synchronized (token) {
+                    try {
+                        token.wait();
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
 
                 try {
                     if (mValueArray != null) {
