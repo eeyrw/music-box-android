@@ -5,6 +5,8 @@
 
 cmake_minimum_required(VERSION 3.4.1)
 
+SET(CMAKE_CXX_FLAGS_RELEASE "$ENV{CXXFLAGS}  -O0 -Wall")
+
 if(${ANDROID_ABI} STREQUAL "x86_64")
     enable_language(ASM_NASM)
 
