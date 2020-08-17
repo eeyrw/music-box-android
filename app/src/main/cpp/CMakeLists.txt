@@ -5,13 +5,17 @@
 
 cmake_minimum_required(VERSION 3.4.1)
 
-SET(CMAKE_CXX_FLAGS_RELEASE "$ENV{CXXFLAGS}  -O0 -Wall")
+# SET(CMAKE_CXX_FLAGS_RELEASE "$ENV{CXXFLAGS}  -O0 -Wall")
+SET(CMAKE_C_FLAGS_RELEASE "$ENV{CFLAGS}  -O0 -Wall")
+SET(CMAKE_CXX_FLAGS_RELEASE "$ENV{CXXFLAGS}  -save-temps")
+SET(CMAKE_C_FLAGS_RELEASE "$ENV{CFLAGS}  -save-temps")
 
-if(${ANDROID_ABI} STREQUAL "x86_64")
+
+if (${ANDROID_ABI} STREQUAL "x86_64")
     enable_language(ASM_NASM)
 
     #set(asm_SRCS src/main/cpp/test.asm)
-elseif(${ANDROID_ABI} STREQUAL "arm64-v8a")
+elseif (${ANDROID_ABI} STREQUAL "arm64-v8a")
     enable_language(ASM)
 
     #set(asm_SRCS src/main/cpp/arm_test.s)
