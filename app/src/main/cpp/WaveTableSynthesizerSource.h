@@ -62,7 +62,7 @@ private:
     // Rendering objects
     int mChannelCount;
     int mSampleRate;
-    Player player;
+    volatile Player player;
 };
 
 #endif //MEGADRONE_SYNTH_H

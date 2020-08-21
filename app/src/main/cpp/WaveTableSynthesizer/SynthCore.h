@@ -20,61 +20,60 @@
 extern "C" {
 #endif
 
-typedef struct _SoundUnit
-{
-	uint32_t wavetablePos;
-	ADDRESS_TYPE waveTableAddress;
-	uint32_t waveTableLen;
-	uint32_t waveTableLoopLen;
-	uint32_t waveTableAttackLen;
-	uint32_t envelopePos;
-	uint32_t increment;
-	int32_t val;
-	int32_t sampleVal;
-	uint32_t envelopeLevel;
-}SoundUnit;
+typedef struct _SoundUnit {
+    uint32_t volatile wavetablePos;
+    ADDRESS_TYPE volatile waveTableAddress;
+    uint32_t volatile waveTableLen;
+    uint32_t volatile waveTableLoopLen;
+    uint32_t volatile waveTableAttackLen;
+    uint32_t volatile envelopePos;
+    uint32_t volatile increment;
+    int32_t volatile val;
+    int32_t volatile sampleVal;
+    uint32_t volatile envelopeLevel;
+} SoundUnit;
 
 
-
-typedef struct _Synthesizer
-{
+typedef struct _Synthesizer {
     SoundUnit SoundUnitList[POLY_NUM];
-	int32_t mixOut;
+    int32_t mixOut;
     uint32_t lastSoundUnit;
-}Synthesizer;
+} Synthesizer;
 
-typedef struct _SampleInfo
-{
-	uint8_t sampleCoverlowerPitch;
-	uint8_t sampleCoverupperPitch;
-	uint8_t sampleBasePitch;
-	uint8_t reserved;
-	uint32_t sampleAddr;
-	uint32_t sampleLen;
-	uint32_t sampleLoopStart;
-	uint32_t sampleLoopLen;
-}SampleInfo;
+typedef struct _SampleInfo {
+    uint8_t sampleCoverlowerPitch;
+    uint8_t sampleCoverupperPitch;
+    uint8_t sampleBasePitch;
+    uint8_t reserved;
+    uint32_t sampleAddr;
+    uint32_t sampleLen;
+    uint32_t sampleLoopStart;
+    uint32_t sampleLoopLen;
+} SampleInfo;
 
-typedef struct _InstrumentInfo
-{
-	uint8_t instrumentId;
-	uint8_t sampleNum;
-	ADDRESS_TYPE sampleBaseAddr;
-	SampleInfo *samples;
-}InstrumentInfo;
+typedef struct _InstrumentInfo {
+    uint8_t instrumentId;
+    uint8_t sampleNum;
+    ADDRESS_TYPE sampleBaseAddr;
+    SampleInfo *samples;
+} InstrumentInfo;
 
 
-extern void SynthInit(Synthesizer* synth);
+extern void SynthInit(volatile Synthesizer *synth);
 
 //#ifdef RUN_TEST
-extern void NoteOnC(Synthesizer* synth,uint8_t note);
-extern void SynthC(Synthesizer* synth);
-extern void GenDecayEnvlopeC(Synthesizer* synth);
+extern void NoteOnC(volatile Synthesizer *synth, uint8_t note);
+
+extern void SynthC(volatile Synthesizer *synth);
+
+extern void GenDecayEnvlopeC(volatile Synthesizer *synth);
 //#endif
 
-extern void NoteOnAsm(Synthesizer* synth,uint8_t note);
-extern void GenDecayEnvlopeAsm(Synthesizer* synth);
-extern void SynthAsm(Synthesizer* synth);
+extern void NoteOnAsm(volatile Synthesizer *synth, uint8_t note);
+
+extern void GenDecayEnvlopeAsm(volatile Synthesizer *synth);
+
+extern void SynthAsm(volatile Synthesizer *synth);
 
 #ifdef __cplusplus
 } //end extern "C"
