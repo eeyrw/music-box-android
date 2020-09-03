@@ -1,42 +1,29 @@
 package com.yuan.music_box;
 
-import androidx.appcompat.app.AppCompatActivity;
-
-import android.annotation.SuppressLint;
-import android.content.ContentUris;
+import android.content.Context;
 import android.content.Intent;
-import android.database.Cursor;
+import android.media.AudioManager;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
-import android.os.Environment;
-import android.provider.DocumentsContract;
-import android.provider.MediaStore;
+import android.util.Log;
+import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Button;
 import android.widget.SeekBar;
 import android.widget.TextView;
-
-import android.content.Context;
-import android.media.AudioManager;
-import android.os.Build;
-import android.util.Log;
-import android.view.MotionEvent;
 import android.widget.Toast;
 
-import com.customview.graph.LineGraphView;
+import androidx.appcompat.app.AppCompatActivity;
+
+import com.customview.graph.WaveformView;
 import com.yuan.midiplayer.MidiPlayer;
 import com.yuan.midiplayer.MidiPlayerEventListener;
 import com.yuan.midiplayer.Player;
 
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.Timer;
-import java.util.TimerTask;
 
 
 public class MainActivity extends AppCompatActivity {
@@ -118,9 +105,9 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        LineGraphView mLineGraphView = (LineGraphView) findViewById(R.id.lineGraphView);
-        mLineGraphView.setBackColor(getResources().getColor(R.color.colorPrimaryDark));
-        mLineGraphView.setExtraText("Time Domain");
+        WaveformView mWaveformView = (WaveformView) findViewById(R.id.waveformView);
+        // mWaveformView.setBackgroundColor(getResources().getColor(R.color.colorPrimaryDark));
+        mWaveformView.setTitle("Time Domain");
 
         Intent intent = new Intent(MainActivity.this, FileListActivity.class);
         startActivityForResult(intent, 0);//此处的requestCode应与下面结果处理函中调用的requestCode一致
@@ -156,8 +143,8 @@ public class MainActivity extends AppCompatActivity {
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        LineGraphView mLineGraphView = (LineGraphView) findViewById(R.id.lineGraphView);
-                        mLineGraphView.setValueArray(waveform);
+                        WaveformView waveformView = (WaveformView) findViewById(R.id.waveformView);
+                        waveformView.setValueArray(waveform);
                     }
                 });
             }
@@ -233,7 +220,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public boolean onTouchEvent(MotionEvent event) {
         if (event.getAction() == MotionEvent.ACTION_DOWN) {
-            midiPlayer.mEngine.noteOn(45);
+            // midiPlayer.mEngine.noteOn(45);
         } else if (event.getAction() == MotionEvent.ACTION_UP) {
             // noteOn(mEngineHandle, false);
         }

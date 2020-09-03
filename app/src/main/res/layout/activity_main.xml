@@ -19,11 +19,12 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
 
-        <com.customview.graph.LineGraphView
-            android:id="@+id/lineGraphView"
+        <com.customview.graph.WaveformView
+            android:id="@+id/waveformView"
             android:layout_width="match_parent"
-            android:layout_height="180dp"
-            android:layout_weight="1" />
+            android:layout_height="160sp"
+            android:layout_weight="1"
+            app:title="TimeDomain" />
 
         <TextView
             android:id="@+id/tvPlayStatus"
@@ -94,9 +95,11 @@
         <TextView
             android:id="@+id/tvFileName"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="56dp"
             android:layout_margin="6sp"
             android:layout_weight="1"
+            android:overScrollMode="ifContentScrolls"
+            android:scrollbars="vertical"
             android:text="No midi file chosen."
             android:textSize="18sp" />
 

@@ -1,10 +1,6 @@
 package com.yuan.midiplayer;
 
 import android.util.Log;
-import android.widget.TextView;
-
-import com.customview.graph.LineGraphView;
-import com.yuan.music_box.R;
 import com.pdrogfer.mididroid.MidiFile;
 import com.pdrogfer.mididroid.event.MidiEvent;
 import com.pdrogfer.mididroid.event.NoteOn;
