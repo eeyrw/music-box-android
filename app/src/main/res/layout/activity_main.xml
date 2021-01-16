@@ -115,6 +115,13 @@
             android:id="@+id/btnChooseMIdi"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_margin="6sp"
+            android:layout_weight="1"
+            android:text="Choose midi file" />
+        <Button
+            android:id="@+id/btnScanQRCode"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
             android:layout_marginStart="6sp"
             android:layout_marginLeft="6sp"
             android:layout_marginTop="6sp"
@@ -122,7 +129,7 @@
             android:layout_marginRight="6sp"
             android:layout_marginBottom="20sp"
             android:layout_weight="1"
-            android:text="Choose midi file" />
+            android:text="Scan QR Song" />
 
     </LinearLayout>
 

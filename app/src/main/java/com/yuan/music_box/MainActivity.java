@@ -85,6 +85,16 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        Button btnScanQRCode = findViewById(R.id.btnScanQRCode);
+        btnScanQRCode.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                midiPlayer.pause();
+                Intent intent = new Intent(MainActivity.this, ContinuousCaptureActivity.class);
+                startActivityForResult(intent, 3);//此处的requestCode应与下面结果处理函中调用的requestCode一致
+            }
+        });
+
         SeekBar sbTranspose = findViewById(R.id.sbTranspose);
         sbTranspose.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
@@ -185,9 +195,24 @@ public class MainActivity extends AppCompatActivity {
                 e.printStackTrace();
             }
 
+        } else if (requestCode == 3 && resultCode == RESULT_OK) {
+            Bundle bundle = data.getExtras();
+            if (bundle != null) {
+               byte[] a= bundle.getByteArray("songContent");
+               Log.d(TAG, toHex(a));
+            }
         }
     }
-
+    private static String toHex(byte[] buf) {
+        StringBuilder sb = new StringBuilder();
+        for(int i=0;i<buf.length;i++) {
+            int high = ((buf[i]>>4) & 0x0f);// 取高4位
+            int low = buf[i] & 0x0f;  //取低4位
+            sb.append(high>9?((char)(high-10)+'a'):(char)(high+'0'));
+            sb.append(low>9?((char)(low-10)+'a'):(char)(low+'0'));
+        }
+        return sb.toString();
+    }
     @Override
     protected void onResume() {
         Log.d(TAG, "onResume");
