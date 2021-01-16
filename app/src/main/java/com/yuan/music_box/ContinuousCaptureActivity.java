@@ -14,6 +14,7 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
 import com.google.zxing.BarcodeFormat;
+import com.google.zxing.ResultMetadataType;
 import com.google.zxing.ResultPoint;
 import com.google.zxing.client.android.BeepManager;
 import com.journeyapps.barcodescanner.BarcodeCallback;
@@ -21,9 +22,12 @@ import com.journeyapps.barcodescanner.BarcodeResult;
 import com.journeyapps.barcodescanner.DecoratedBarcodeView;
 import com.journeyapps.barcodescanner.DefaultDecoderFactory;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
 /**
  * This sample performs continuous scanning, displaying the barcode and source image whenever
@@ -37,28 +41,43 @@ public class ContinuousCaptureActivity extends Activity {
     private BarcodeCallback callback = new BarcodeCallback() {
         @Override
         public void barcodeResult(BarcodeResult result) {
-            if(result.getText() == null || result.getText().equals(lastText)) {
-                // Prevent duplicate scans
-                return;
+            //if(result.getText() == null || result.getText().equals(lastText)) {
+            // Prevent duplicate scans
+            //    return;
+            //}
+
+            //lastText = result.getText();
+            //barcodeView.setStatusText(result.getText());
+            if (result.getBarcodeFormat() == BarcodeFormat.QR_CODE) {
+                beepManager.playBeepSoundAndVibrate();
+
+                //Added preview of scanned barcode
+                ImageView imageView = findViewById(R.id.barcodePreview);
+                imageView.setImageBitmap(result.getBitmapWithResultPoints(Color.YELLOW));
+
+                Intent intent = getIntent();
+                //这里使用bundle绷带来传输数据
+                Bundle bundle = new Bundle();
+                //传输的内容仍然是键值对的形式
+                Map<ResultMetadataType, Object> metaData = result.getResultMetadata();
+                java.util.List<byte[]> bytesList = (java.util.List<byte[]>) metaData.get(ResultMetadataType.BYTE_SEGMENTS);
+
+                if (bytesList != null) {
+                    for (byte[] bytes : bytesList) {
+                        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+                        try {
+                            outputStream.write(bytes);
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                        bundle.putByteArray("songContent", outputStream.toByteArray());
+                    }
+                    intent.putExtras(bundle);
+                    setResult(RESULT_OK, intent);
+                    finish();
+                }
             }
 
-            lastText = result.getText();
-            barcodeView.setStatusText(result.getText());
-
-            beepManager.playBeepSoundAndVibrate();
-
-            //Added preview of scanned barcode
-            ImageView imageView = findViewById(R.id.barcodePreview);
-            imageView.setImageBitmap(result.getBitmapWithResultPoints(Color.YELLOW));
-
-            Intent intent = getIntent();
-            //这里使用bundle绷带来传输数据
-            Bundle bundle = new Bundle();
-            //传输的内容仍然是键值对的形式
-            bundle.putByteArray("songContent",result.getRawBytes());
-            intent.putExtras(bundle);
-            setResult(RESULT_OK, intent);
-            finish();
         }
 
         @Override

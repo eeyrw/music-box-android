@@ -198,21 +198,17 @@ public class MainActivity extends AppCompatActivity {
         } else if (requestCode == 3 && resultCode == RESULT_OK) {
             Bundle bundle = data.getExtras();
             if (bundle != null) {
-               byte[] a= bundle.getByteArray("songContent");
-               Log.d(TAG, toHex(a));
+                byte[] a = bundle.getByteArray("songContent");
+                StringBuilder sb = new StringBuilder();
+                for (int j = 0; j < a.length; j++) {
+                    sb.append(String.format("%02X ", a[j] & 0xFF));
+                }
+                Log.d(TAG, sb.toString());
+                Log.d(TAG, String.format("DataLen %d", a.length));
             }
         }
     }
-    private static String toHex(byte[] buf) {
-        StringBuilder sb = new StringBuilder();
-        for(int i=0;i<buf.length;i++) {
-            int high = ((buf[i]>>4) & 0x0f);// 取高4位
-            int low = buf[i] & 0x0f;  //取低4位
-            sb.append(high>9?((char)(high-10)+'a'):(char)(high+'0'));
-            sb.append(low>9?((char)(low-10)+'a'):(char)(low+'0'));
-        }
-        return sb.toString();
-    }
+
     @Override
     protected void onResume() {
         Log.d(TAG, "onResume");
