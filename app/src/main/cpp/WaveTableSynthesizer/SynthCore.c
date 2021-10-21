@@ -70,8 +70,11 @@ void SynthC(volatile Synthesizer *synth) {
         if (soundUnits[i].envelopeLevel != 0) {
             pWaveTable = (int16_t *) soundUnits[i].waveTableAddress;
             waveTablePosInt = (soundUnits[i].wavetablePos) >> 8;
+            int16_t s1 = pWaveTable[waveTablePosInt];
+            int16_t s2 = pWaveTable[waveTablePosInt + 1];
+            int16_t s = s1 + (((s2 - s1) * (soundUnits[i].wavetablePos & 0xff)) >> 8);
             soundUnits[i].val =
-                    ((int32_t) soundUnits[i].envelopeLevel) * pWaveTable[waveTablePosInt];
+                    ((int32_t) soundUnits[i].envelopeLevel) * s;
             soundUnits[i].sampleVal = pWaveTable[waveTablePosInt];
             uint32_t waveTablePos = soundUnits[i].increment +
                                     soundUnits[i].wavetablePos;
