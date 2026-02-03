@@ -11,17 +11,31 @@ import android.view.View;
 
 import com.yuan.music_box.R;
 
-/**
- * TODO: document your custom view class.
- */
 public class WaveformView extends View {
+
+    // ===== 可配置属性 =====
     private String mTitle = "Waveform";
     private int mBackgroundColor = Color.DKGRAY;
     private int mLineColor = Color.WHITE;
-    private int mSurfaceHeight;
-    private int mSurfaceWidth;
+
+    // ===== 尺寸 =====
+    private int mWidth;
+    private int mHeight;
+    private float mCenterY;
+
+    // ===== 数据 =====
     private float[] mValueArray;
 
+    // ===== 绘制缓存 =====
+    private Paint mLinePaint;
+    private Paint mTextPaint;
+
+    private float[] mLinePoints;
+
+    private Bitmap mTitleBitmap;
+    private Canvas mTitleCanvas;
+
+    // ===== 构造 =====
     public WaveformView(Context context) {
         super(context);
         init(null, 0);
@@ -32,131 +46,161 @@ public class WaveformView extends View {
         init(attrs, 0);
     }
 
-    public WaveformView(Context context, AttributeSet attrs, int defStyle) {
-        super(context, attrs, defStyle);
-        init(attrs, defStyle);
+    public WaveformView(Context context, AttributeSet attrs, int defStyleAttr) {
+        super(context, attrs, defStyleAttr);
+        init(attrs, defStyleAttr);
     }
 
-    public String getTitle() {
-        return mTitle;
+    private static float clamp(float v) {
+        if (v > 1f) return 1f;
+        if (v < -1f) return -1f;
+        return v;
     }
 
-    public void setTitle(String mTitle) {
-        this.mTitle = mTitle;
+    // ===== 初始化 =====
+    private void init(AttributeSet attrs, int defStyle) {
+        if (attrs != null) {
+            TypedArray a = getContext().obtainStyledAttributes(
+                    attrs, R.styleable.WaveformView, defStyle, 0);
+
+            mTitle = a.getString(R.styleable.WaveformView_title);
+            mBackgroundColor = a.getColor(
+                    R.styleable.WaveformView_backgroundColor,
+                    mBackgroundColor);
+            mLineColor = a.getColor(
+                    R.styleable.WaveformView_lineColor,
+                    mLineColor);
+            a.recycle();
+        }
+
+        initPaints();
     }
 
-    public int getBackgroundColor() {
-        return mBackgroundColor;
+    private void initPaints() {
+        mLinePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        mLinePaint.setStyle(Paint.Style.STROKE);
+        mLinePaint.setStrokeWidth(3f);
+        mLinePaint.setColor(mLineColor);
+
+        mTextPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        mTextPaint.setStyle(Paint.Style.FILL);
+        mTextPaint.setColor(mLineColor);
     }
 
-    public void setBackgroundColor(int mBackgroundColor) {
-        this.mBackgroundColor = mBackgroundColor;
-        postInvalidate();
+    // ===== 尺寸变化 =====
+    @Override
+    protected void onSizeChanged(int w, int h, int oldw, int oldh) {
+        mWidth = w;
+        mHeight = h;
+        mCenterY = h * 0.5f;
+
+        mTextPaint.setTextSize(h * 0.06f);
+        rebuildTitleBitmap();
     }
 
-    public int getLineColor() {
-        return mLineColor;
+    // ===== 标题 Bitmap =====
+    private void rebuildTitleBitmap() {
+        if (mTitle == null || mTitle.isEmpty()) {
+            if (mTitleBitmap != null) {
+                mTitleBitmap.recycle();
+                mTitleBitmap = null;
+                mTitleCanvas = null;
+            }
+            return;
+        }
+
+        Paint.FontMetrics fm = mTextPaint.getFontMetrics();
+        int textHeight = (int) (fm.bottom - fm.top);
+        int textWidth = (int) mTextPaint.measureText(mTitle);
+        int baseline = (int) (-fm.ascent);
+
+        if (textWidth <= 0 || textHeight <= 0) return;
+
+        if (mTitleBitmap != null) {
+            mTitleBitmap.recycle();
+        }
+
+        mTitleBitmap = Bitmap.createBitmap(
+                textWidth,
+                textHeight,
+                Bitmap.Config.ARGB_8888
+        );
+        mTitleCanvas = new Canvas(mTitleBitmap);
+        mTitleCanvas.drawColor(Color.TRANSPARENT);
+        mTitleCanvas.drawText(mTitle, 0, baseline, mTextPaint);
     }
 
-    public void setLineColor(int mLineColor) {
-        this.mLineColor = mLineColor;
-        postInvalidate();
+    // ===== 绘制 =====
+    @Override
+    protected void onDraw(Canvas canvas) {
+        // 背景
+        canvas.drawColor(mBackgroundColor);
+
+        // 中心线
+        canvas.drawLine(
+                0, mCenterY,
+                mWidth, mCenterY,
+                mLinePaint
+        );
+
+        // 标题
+        if (mTitleBitmap != null) {
+            float margin = mHeight * 0.05f;
+            canvas.drawBitmap(mTitleBitmap, margin, margin, null);
+        }
+
+        // 波形
+        if (mValueArray == null || mValueArray.length < 2) return;
+
+        int n = mValueArray.length;
+        int pointCount = (n - 1) * 4;
+
+        if (mLinePoints == null || mLinePoints.length < pointCount) {
+            mLinePoints = new float[pointCount];
+        }
+
+        float dx = (float) mWidth / (n - 1);
+        float halfH = mHeight * 0.5f;
+
+        int j = 0;
+        for (int i = 0; i < n - 1; i++) {
+            float v0 = clamp(mValueArray[i]);
+            float v1 = clamp(mValueArray[i + 1]);
+
+            mLinePoints[j++] = dx * i;
+            mLinePoints[j++] = mCenterY - v0 * halfH;
+            mLinePoints[j++] = dx * (i + 1);
+            mLinePoints[j++] = mCenterY - v1 * halfH;
+        }
+
+        canvas.drawLines(mLinePoints, 0, j, mLinePaint);
     }
 
-    public float[] getValueArray() {
-        return mValueArray;
-    }
+    // ===== API（按你要求，不管 shadow）=====
 
-    public void setValueArray(float[] mValueArray) {
-        this.mValueArray = mValueArray;
+    public void setTitle(String title) {
+        mTitle = title;
+        rebuildTitleBitmap();
         invalidate();
     }
 
-    private void init(AttributeSet attrs, int defStyle) {
-        // Load attributes
-        final TypedArray a = getContext().obtainStyledAttributes(
-                attrs, R.styleable.WaveformView, defStyle, 0);
-
-        mTitle = a.getString(
-                R.styleable.WaveformView_title);
-        mBackgroundColor = a.getColor(
-                R.styleable.WaveformView_backgroundColor,
-                mBackgroundColor);
-        mLineColor = a.getColor(
-                R.styleable.WaveformView_lineColor,
-                mLineColor);
-        a.recycle();
-
-        mValueArray = new float[256];
-
-    }
-
     @Override
-    protected void onSizeChanged(int w, int h, int oldw, int oldh) {
-        super.onSizeChanged(w, h, oldw, oldh);
-        mSurfaceHeight = h;
-        mSurfaceWidth = w;
+    public void setBackgroundColor(int color) {
+        mBackgroundColor = color;
+        invalidate();
     }
 
-    @Override
-    protected void onDraw(Canvas canvas) {
-        super.onDraw(canvas);
-        Paint linePaint = new Paint();
-        Paint textPaint = new Paint();
-        linePaint.setColor(mLineColor);
-
-        textPaint.setAntiAlias(true);
-        textPaint.setColor(mLineColor);
-        textPaint.setStyle(Paint.Style.FILL);
-        textPaint.setTextSize(mSurfaceHeight * 0.06f);
-
-        Paint.FontMetrics fm = new Paint.FontMetrics();
-
-        textPaint.getFontMetrics(fm);
-
-        int textHeight = (int) (fm.bottom - fm.top);
-        int textWidth = (int) textPaint.measureText(mTitle);
-        int textBaseline = (int) (-fm.ascent);
-
-        Bitmap textBitmap = Bitmap.createBitmap(textWidth, textHeight, Bitmap.Config.ARGB_8888);
-
-        Canvas textCanvas = new Canvas(textBitmap);
-        textCanvas.drawColor(Color.TRANSPARENT);
-        textCanvas.drawText(mTitle, 0, textBaseline, textPaint);
-
-
-        if (mValueArray != null) {
-            int sampleNum = mValueArray.length;
-
-            float barWidth = (float) mSurfaceWidth / sampleNum;
-            canvas.drawColor(mBackgroundColor);// 这里是绘制背景
-            linePaint.setStrokeWidth(1f);
-
-            canvas.drawLine(0, mSurfaceHeight / 2,
-                    mSurfaceWidth, mSurfaceHeight / 2,
-                    linePaint);
-
-            // canvas.drawRect(left, top, right, bottom, paint)
-            canvas.drawBitmap(textBitmap,
-                    mSurfaceHeight * 0.05f,
-                    mSurfaceHeight * 0.05f, null);
-
-            float[] points = new float[sampleNum * 4];
-
-            for (int i = 0, j = 0; i < sampleNum - 1; i++) {
-                points[j] = barWidth * i;
-                points[j + 1] = mSurfaceHeight / 2f
-                        - mValueArray[i] * mSurfaceHeight / 2f;
-                points[j + 2] = barWidth * (i + 1);
-                points[j + 3] = mSurfaceHeight / 2f
-                        - mValueArray[i + 1] * mSurfaceHeight
-                        / 2f;
-                j += 4;
-            }
-            linePaint.setStrokeWidth(3f);
-            canvas.drawLines(points, linePaint);
-
-        }
+    public void setLineColor(int color) {
+        mLineColor = color;
+        mLinePaint.setColor(color);
+        mTextPaint.setColor(color);
+        rebuildTitleBitmap();
+        invalidate();
     }
 
+    public void setValueArray(float[] values) {
+        // 假定调用者保证线程安全 & 生命周期
+        mValueArray = values;
+        postInvalidateOnAnimation();
+    }
 }
