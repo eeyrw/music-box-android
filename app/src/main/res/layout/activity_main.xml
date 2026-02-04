@@ -19,12 +19,11 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
 
-        <com.customview.graph.WaveformView
-            android:id="@+id/waveformView"
+        <com.customview.graph.AudioMeterView
+            android:id="@+id/audio_meter"
             android:layout_width="match_parent"
-            android:layout_height="160sp"
-            android:layout_weight="1"
-            app:title="TimeDomain" />
+            android:layout_height="150sp" />
+
 
         <TextView
             android:id="@+id/tvPlayStatus"

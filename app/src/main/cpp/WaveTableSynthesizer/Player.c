@@ -7,14 +7,14 @@
 
 extern unsigned char Score[];
 
-void Player32kProc(volatile Player *player) {
+void Player32kProc(Player *player) {
     Synth(&(player->mainSynthesizer));
     player->currentTick++;
     if (player->decayGenTick < 200)
         player->decayGenTick += 1;
 }
 
-void PlayerProcess(volatile Player *player) {
+void PlayerProcess(Player *player) {
 
     uint8_t temp;
     //LOGD("PlayerProcess\n");
@@ -23,8 +23,7 @@ void PlayerProcess(volatile Player *player) {
         GenDecayEnvlope(&(player->mainSynthesizer));
         player->decayGenTick = 0;
     }
-    if (player->status == STATUS_PLAYING)
-    {
+    if (player->status == STATUS_PLAYING) {
         if ((player->currentTick >> 8) >= player->lastScoreTick)
         {
             do
@@ -41,14 +40,14 @@ void PlayerProcess(volatile Player *player) {
                     NoteOn(&(player->mainSynthesizer), temp);
                 }
             } while ((temp & 0x80) == 0);
-            
+
             PlayUpdateNextScoreTick(player);
         }
     }
     //LOGD("PlayerProcessWEnd\n");
 }
 
-void PlayUpdateNextScoreTick(volatile Player *player) {
+void PlayUpdateNextScoreTick(Player *player) {
     uint32_t tempU32;
     uint8_t temp;
     tempU32 = player->lastScoreTick;
@@ -60,7 +59,7 @@ void PlayUpdateNextScoreTick(volatile Player *player) {
     player->lastScoreTick = tempU32;
 }
 
-void PlayerPlay(volatile Player *player) {
+void PlayerPlay(Player *player) {
     player->currentTick = 0;
     player->lastScoreTick = 0;
     player->decayGenTick = 0;
@@ -69,7 +68,7 @@ void PlayerPlay(volatile Player *player) {
     player->status = STATUS_PLAYING;
 }
 
-void PlayerInit(volatile Player *player) {
+void PlayerInit(Player *player) {
     player->status = STATUS_STOP;
     player->currentTick = 0;
     player->lastScoreTick = 0;
@@ -78,6 +77,6 @@ void PlayerInit(volatile Player *player) {
     SynthInit(&(player->mainSynthesizer));
 }
 
-void PlayerResetSynthesizer(volatile Player *player) {
+void PlayerResetSynthesizer(Player *player) {
     SynthInit(&(player->mainSynthesizer));
 }

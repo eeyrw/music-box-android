@@ -5,6 +5,27 @@
 #include <TappableAudioSource.h>
 #include <MonoToStereo.h>
 #include <Player.h>
+#include "LockFreeQueue.h"
+
+#include <cstdint>
+
+struct SynthEvent {
+    enum Type : uint8_t {
+        NoteOn,
+        NoteOff
+    } type;
+
+    uint8_t note;
+};
+
+
+static constexpr size_t kEventQueueSize = 256;
+
+static constexpr int kSpectrumBlock = 1024;
+static float spectrumTap[kSpectrumBlock];
+static int spectrumTapPtr = 0;
+extern "C" void pushAudio(const float *data);
+
 
 class WaveTableSynthesizerSource : public IRenderableAudio {
 public:
@@ -17,6 +38,12 @@ public:
         PlayerInit(&player);
     }
 
+    // 主线程或 MIDI 线程调用
+    void postNoteOn(uint8_t note) {
+        SynthEvent evt{SynthEvent::NoteOn, note};
+        eventQueue.push(evt);
+    }
+
     void noteOn(uint8_t note) {
         NoteOn(&player.mainSynthesizer, note);
     };
@@ -27,9 +54,27 @@ public:
 
     // From IRenderableAudio
     void renderAudio(float *audioData, int32_t numFrames) override {
+
+        SynthEvent evt;
+        while (eventQueue.pop(evt)) {
+            if (evt.type == SynthEvent::NoteOn) {
+                NoteOn(&player.mainSynthesizer, evt.note);
+            }
+        }
+
         for (int i = 0; i < numFrames; ++i) {
             Player32kProc(&player);
             audioData[i] = (float) (player.mainSynthesizer.mixOut >> 8) / (float) 32768 * 0.5;
+
+
+            // ======== 频谱 tap（新增） ========
+            spectrumTap[spectrumTapPtr++] = audioData[i];
+            if (spectrumTapPtr == kSpectrumBlock) {
+                pushAudio(spectrumTap);   // 🚀 非阻塞
+                spectrumTapPtr = 0;
+            }
+            // =================================
+
             PlayerProcess(&player);
             if (i % 4 == 0) {
                 if (waveformDataPtr < sizeof(waveformData)) {
@@ -62,7 +107,8 @@ private:
     // Rendering objects
     int mChannelCount;
     int mSampleRate;
-    volatile Player player;
+    Player player;
+    LockFreeQueue<SynthEvent, kEventQueueSize> eventQueue;
 };
 
 #endif //MEGADRONE_SYNTH_H

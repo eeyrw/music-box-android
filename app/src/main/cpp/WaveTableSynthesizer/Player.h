@@ -26,21 +26,21 @@ typedef struct _Player
 } Player;
 
 
-extern void PlayerInit(volatile Player *player);
+extern void PlayerInit(Player *player);
 
-extern void Player32kProc(volatile Player *player);
+extern void Player32kProc(Player *player);
 
-extern void PlayerProcess(volatile Player *player);
+extern void PlayerProcess(Player *player);
 
-extern void PlayerPlay(volatile Player *player);
+extern void PlayerPlay(Player *player);
 
-extern void UpdateTick(volatile Player *player);
+extern void UpdateTick(Player *player);
 
-extern uint8_t PlayNoteTimingCheck(volatile Player *player);
+extern uint8_t PlayNoteTimingCheck(Player *player);
 
-extern void PlayUpdateNextScoreTick(volatile Player *player);
+extern void PlayUpdateNextScoreTick(Player *player);
 
-extern void PlayerResetSynthesizer(volatile Player *player);
+extern void PlayerResetSynthesizer(Player *player);
 
 #ifdef __cplusplus
 } //end extern "C"

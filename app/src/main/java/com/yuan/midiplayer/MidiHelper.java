@@ -1,26 +1,16 @@
 package com.yuan.midiplayer;
 
-import android.os.Build;
-import android.util.Log;
+import com.pgf.mididroid.MidiFile;
+import com.pgf.mididroid.MidiTrack;
+import com.pgf.mididroid.event.MidiEvent;
+import com.pgf.mididroid.event.NoteOn;
+import com.pgf.mididroid.event.meta.Tempo;
+import com.pgf.mididroid.event.meta.TimeSignature;
+import com.pgf.mididroid.util.MetronomeTick;
+import com.pgf.mididroid.util.MidiUtil;
 
-import androidx.annotation.RequiresApi;
-
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
-
-import com.pdrogfer.mididroid.MidiFile;
-import com.pdrogfer.mididroid.MidiTrack;
-import com.pdrogfer.mididroid.event.MidiEvent;
-import com.pdrogfer.mididroid.event.NoteOn;
-import com.pdrogfer.mididroid.event.meta.Tempo;
-import com.pdrogfer.mididroid.event.meta.TimeSignature;
-import com.pdrogfer.mididroid.util.MetronomeTick;
-import com.pdrogfer.mididroid.util.MidiUtil;
 
 public class MidiHelper {
     private MidiFile mMidiFile;

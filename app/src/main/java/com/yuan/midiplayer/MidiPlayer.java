@@ -1,11 +1,12 @@
 package com.yuan.midiplayer;
 
 import android.util.Log;
-import com.pdrogfer.mididroid.MidiFile;
-import com.pdrogfer.mididroid.event.MidiEvent;
-import com.pdrogfer.mididroid.event.NoteOn;
-import com.pdrogfer.mididroid.util.MidiEventListener;
-import com.pdrogfer.mididroid.util.MidiProcessor;
+
+import com.pgf.mididroid.MidiFile;
+import com.pgf.mididroid.event.MidiEvent;
+import com.pgf.mididroid.event.NoteOn;
+import com.pgf.mididroid.util.MidiEventListener;
+import com.pgf.mididroid.util.MidiProcessor;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -16,18 +17,20 @@ import java.util.TimerTask;
 public class MidiPlayer extends Player {
     private final String TAG = com.yuan.music_box.MainActivity.class.toString();
     public MusicBoxEngine mEngine;
+    public SpectrumNative mSpectrum;
     private MidiProcessor mProcessor;
     private String midiFilePath;
     private int mTransposeValue = 0;
     private MidiPlayerEventListener mListener;
-    private Timer waveformPollTimer = new Timer();
-    private TimerTask waveformPollTask;
+    private Timer visualizeTaskTimer = new Timer();
+    private TimerTask visualizeTask;
 
 
     public MidiPlayer(MidiPlayerEventListener listener) {
         super(listener);
         mListener = listener;
         mEngine = new MusicBoxEngine();
+        mSpectrum = new SpectrumNative();
     }
 
     public void setTranspose(int transposeValue) {
@@ -36,6 +39,8 @@ public class MidiPlayer extends Player {
 
     @Override
     protected void internalPlay() {
+        if (mSpectrum != null)
+            mSpectrum.spectStart();
         if (mProcessor != null)
             mProcessor.start();
         if (mEngine != null)
@@ -49,11 +54,15 @@ public class MidiPlayer extends Player {
             mProcessor.stop();
         if (mEngine != null)
             mEngine.pause(true);
+        if (mSpectrum != null)
+            mSpectrum.spectStop();
         stopInternalTimer();
     }
 
     @Override
     protected void internalResume() {
+        if (mSpectrum != null)
+            mSpectrum.spectStart();
         if (mProcessor != null)
             mProcessor.start();
         if (mEngine != null)
@@ -69,36 +78,38 @@ public class MidiPlayer extends Player {
             mEngine.pause(true);
             mEngine.resetSynthesizer();
         }
+        if (mSpectrum != null)
+            mSpectrum.spectStop();
         stopInternalTimer();
     }
 
     void stopInternalTimer() {
-        if (waveformPollTimer != null) {
-            waveformPollTimer.cancel();
-            waveformPollTimer = null;
+        if (visualizeTaskTimer != null) {
+            visualizeTaskTimer.cancel();
+            visualizeTaskTimer = null;
         }
-        if (waveformPollTask != null) {
-            waveformPollTask.cancel();
-            waveformPollTask = null;
+        if (visualizeTask != null) {
+            visualizeTask.cancel();
+            visualizeTask = null;
         }
     }
 
     void startInternalTimer() {
-        if (waveformPollTimer == null) {
-            waveformPollTimer = new Timer();
+        if (visualizeTaskTimer == null) {
+            visualizeTaskTimer = new Timer();
         }
 
-        if (waveformPollTask == null) {
-            waveformPollTask = new TimerTask() {
+        if (visualizeTask == null) {
+            visualizeTask = new TimerTask() {
                 @Override
                 public void run() {
-                    mListener.onWaveformChange(mEngine.getWaveformData());
+                    mListener.onVisualChangeChange(mEngine.getWaveformData(), mSpectrum.spectGetSpectrum());
                 }
             };
         }
 
-        if (waveformPollTimer != null && waveformPollTask != null)
-            waveformPollTimer.schedule(waveformPollTask, 0, 50);
+        if (visualizeTaskTimer != null && visualizeTask != null)
+            visualizeTaskTimer.schedule(visualizeTask, 0, 50);
     }
 
     public void playMidiFile(InputStream input) {
@@ -106,8 +117,8 @@ public class MidiPlayer extends Player {
             // File input = new File(midiFilePath);
             MidiFile midi = new MidiFile(input);
             NoteListProcessor np = new NoteListProcessor(midi);
-            np.recommHighestPitch = 72; //C5 in midi number
-            np.recommLowestPitch = 72; //C5 in midi number
+            np.recommHighestPitch = 60; //C4 in midi number
+            np.recommLowestPitch = 60; //C4 in midi number
             np.analyzeNoteMapByCentroid();
             mListener.onSuggestTransposeChange(np.suggestTranpose);
             mTransposeValue = np.suggestTranpose;

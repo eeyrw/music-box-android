@@ -16,7 +16,7 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-import com.customview.graph.WaveformView;
+import com.customview.graph.AudioMeterView;
 import com.yuan.midiplayer.MidiPlayer;
 import com.yuan.midiplayer.MidiPlayerEventListener;
 import com.yuan.midiplayer.Player;
@@ -31,11 +31,14 @@ public class MainActivity extends AppCompatActivity {
     private MidiPlayer midiPlayer;
     private String midiFilePath;
 
+    private AudioMeterView meterView;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         Log.d(TAG, "onCreate");
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        meterView = findViewById(R.id.audio_meter);
 
         final TextView tvPlayStatus = findViewById(R.id.tvPlayStatus);
 
@@ -116,9 +119,6 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        WaveformView mWaveformView = (WaveformView) findViewById(R.id.waveformView);
-        // mWaveformView.setBackgroundColor(getResources().getColor(R.color.colorPrimaryDark));
-        mWaveformView.setTitle("Time Domain");
 
         Intent intent = new Intent(MainActivity.this, FileListActivity.class);
         startActivityForResult(intent, 0);//此处的requestCode应与下面结果处理函中调用的requestCode一致
@@ -150,15 +150,16 @@ public class MainActivity extends AppCompatActivity {
             }
 
             @Override
-            public void onWaveformChange(float[] waveform) {
+            public void onVisualChangeChange(float[] waveform, float[] spectrum) {
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        WaveformView waveformView = (WaveformView) findViewById(R.id.waveformView);
-                        waveformView.setValueArray(waveform);
+
+                        meterView.pushAudioFrame(waveform, spectrum);
                     }
                 });
             }
+
         });
     }
 

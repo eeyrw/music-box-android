@@ -28,11 +28,12 @@ void MusicBoxEngine::pause(bool isPause) {
 }
 
 void MusicBoxEngine::resetSynthesizer() {
+    LOGD("Reset the synthesizer.");
     mAudioSource->resetSynthesizer();
 }
 
 void MusicBoxEngine::noteOn(uint8_t note) {
-    mAudioSource->noteOn(note);
+    mAudioSource->postNoteOn(note);
 }
 
 void MusicBoxEngine::restart() {
@@ -72,6 +73,7 @@ void MusicBoxEngine::createCallback(std::vector<int> cpuIds) {
 void MusicBoxEngine::start() {
     auto result = createPlaybackStream();
     if (result == Result::OK) {
+        LOGD("Start the playback stream.");
         // Create our synthesizer audio source using the properties of the stream
         mAudioSource = std::make_shared<WaveTableSynthesizerSource>(mStream->getSampleRate(),
                                                                     mStream->getChannelCount());

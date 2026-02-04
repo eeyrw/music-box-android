@@ -2,10 +2,12 @@ package com.yuan.midiplayer;
 
 import android.util.Log;
 
-import com.pdrogfer.mididroid.MidiFile;
+import com.pgf.mididroid.MidiFile;
 
-import java.io.InputStream;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 
 public class NoteListProcessor {
     public int highestPitch;
