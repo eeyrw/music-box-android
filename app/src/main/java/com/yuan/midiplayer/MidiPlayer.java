@@ -17,7 +17,6 @@ import java.util.TimerTask;
 public class MidiPlayer extends Player {
     private final String TAG = com.yuan.music_box.MainActivity.class.toString();
     public MusicBoxEngine mEngine;
-    public SpectrumNative mSpectrum;
     private MidiProcessor mProcessor;
     private String midiFilePath;
     private int mTransposeValue = 0;
@@ -30,7 +29,6 @@ public class MidiPlayer extends Player {
         super(listener);
         mListener = listener;
         mEngine = new MusicBoxEngine();
-        mSpectrum = new SpectrumNative();
     }
 
     public void setTranspose(int transposeValue) {
@@ -39,8 +37,6 @@ public class MidiPlayer extends Player {
 
     @Override
     protected void internalPlay() {
-        if (mSpectrum != null)
-            mSpectrum.spectStart();
         if (mProcessor != null)
             mProcessor.start();
         if (mEngine != null)
@@ -54,15 +50,11 @@ public class MidiPlayer extends Player {
             mProcessor.stop();
         if (mEngine != null)
             mEngine.pause(true);
-        if (mSpectrum != null)
-            mSpectrum.spectStop();
         stopInternalTimer();
     }
 
     @Override
     protected void internalResume() {
-        if (mSpectrum != null)
-            mSpectrum.spectStart();
         if (mProcessor != null)
             mProcessor.start();
         if (mEngine != null)
@@ -78,8 +70,6 @@ public class MidiPlayer extends Player {
             mEngine.pause(true);
             mEngine.resetSynthesizer();
         }
-        if (mSpectrum != null)
-            mSpectrum.spectStop();
         stopInternalTimer();
     }
 
@@ -103,13 +93,13 @@ public class MidiPlayer extends Player {
             visualizeTask = new TimerTask() {
                 @Override
                 public void run() {
-                    mListener.onVisualChangeChange(mEngine.getWaveformData(), mSpectrum.spectGetSpectrum());
+                    mListener.onVisualChangeChange(mEngine.getWaveformData(), mEngine.getSpectrumData());
                 }
             };
         }
 
         if (visualizeTaskTimer != null && visualizeTask != null)
-            visualizeTaskTimer.schedule(visualizeTask, 0, 50);
+            visualizeTaskTimer.schedule(visualizeTask, 0, 30);
     }
 
     public void playMidiFile(InputStream input) {

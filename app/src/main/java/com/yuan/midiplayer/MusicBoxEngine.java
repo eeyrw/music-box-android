@@ -21,6 +21,9 @@ public class MusicBoxEngine {
 
     private static native float[] nativeGetWaveformData(long engineHandle);
 
+    private static native float[] nativeGetSpectrumData(long engineHandle);
+
+
     // Used to load the 'native-lib' library on application startup.
     static {
         System.loadLibrary("native-lib");
@@ -55,6 +58,13 @@ public class MusicBoxEngine {
             return nativeGetWaveformData(mEngineHandle);
         else
             return new float[256];
+    }
+
+    public float[] getSpectrumData() {
+        if (mEngineHandle != 0)
+            return nativeGetSpectrumData(mEngineHandle);
+        else
+            return new float[128];
     }
 
     // Obtain CPU cores which are reserved for the foreground app. The audio thread can be

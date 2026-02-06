@@ -2,7 +2,7 @@
 #include <cstring>
 #include "MusicBoxEngine.h"
 #include "WaveTableSynthesizerSource.h"
-
+#include "AudioVisualCalc.h"
 /**
  * Main audio engine for the MegaDrone sample. It is responsible for:
  *
@@ -18,13 +18,18 @@
 MusicBoxEngine::MusicBoxEngine(std::vector<int> cpuIds) {
     createCallback(cpuIds);
     start();
+    runVisualCalc();
 }
 
 void MusicBoxEngine::pause(bool isPause) {
     if (isPause) {
         mStream->pause();
+        stopVisualCalc();
     } else
+    {
         mStream->start();
+        runVisualCalc();
+    }
 }
 
 void MusicBoxEngine::resetSynthesizer() {
@@ -39,11 +44,27 @@ void MusicBoxEngine::noteOn(uint8_t note) {
 void MusicBoxEngine::restart() {
     LOGD("Restart the playback stream.");
     start();
+    runVisualCalc();
     mStream->start();
 }
 
 void MusicBoxEngine::readWaveformData(const float *data) {
-    memcpy((void *) data, mAudioSource->waveformData, 256 * sizeof(float));
+    const WaveformFrame* pBlk;
+    pBlk = waveformProcessor.waveformSnapshot.beginRead();
+    if(pBlk) {
+        memcpy((void *) data, pBlk->waveform, sizeof(pBlk->waveform));
+        waveformProcessor.waveformSnapshot.endRead(pBlk);
+    }
+
+}
+
+void MusicBoxEngine::readSpectrumData(const float *data) {
+    const SpectrumFrame* pBlk;
+    pBlk = spectrumProcessor.spectrumSnapshot.beginRead();
+    if(pBlk) {
+        memcpy((void *) data, pBlk->bands, sizeof(pBlk->bands));
+        spectrumProcessor.spectrumSnapshot.endRead(pBlk);
+    }
 }
 
 // Create the playback stream
@@ -70,6 +91,18 @@ void MusicBoxEngine::createCallback(std::vector<int> cpuIds) {
     mCallback->setThreadAffinityEnabled(true);
 }
 
+void MusicBoxEngine::runVisualCalc()
+{
+    visualCalcRunning.store(true);
+    visualCalcWorker = std::thread(&MusicBoxEngine::visualCalcThread, this);
+    visualCalcWorker.detach();
+}
+
+void MusicBoxEngine::stopVisualCalc()
+{
+    visualCalcRunning.store(false);
+}
+
 void MusicBoxEngine::start() {
     auto result = createPlaybackStream();
     if (result == Result::OK) {
@@ -80,5 +113,29 @@ void MusicBoxEngine::start() {
         mCallback->setSource(std::dynamic_pointer_cast<IRenderableAudio>(mAudioSource));
     } else {
         LOGE("Failed to create the playback stream. Error: %s", convertToText(result));
+    }
+
+
+}
+
+void MusicBoxEngine::visualCalcThread() {
+    using clock = std::chrono::steady_clock;
+    constexpr auto interval = std::chrono::milliseconds(EXTRACT_INTERVAL_MS);
+
+    const AudioBlock* pBlk = nullptr;
+    auto nextTick = clock::now();
+
+    while (visualCalcRunning.load()) {
+        nextTick += interval;
+
+        // 非阻塞：永远读“最新快照”
+        pBlk=mAudioSource->visualInputSnapshot.beginRead();
+        if (pBlk!= nullptr) {
+            waveformProcessor.processBlock(*pBlk);
+            spectrumProcessor.processBlock(*pBlk);
+            mAudioSource->visualInputSnapshot.endRead(pBlk);
+        }
+
+        std::this_thread::sleep_until(nextTick);
     }
 }

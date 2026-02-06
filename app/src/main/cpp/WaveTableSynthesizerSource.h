@@ -6,6 +6,8 @@
 #include <MonoToStereo.h>
 #include <Player.h>
 #include "LockFreeQueue.h"
+#include "PinnedSnapshot.h"
+#include "AudioVisualCalc.h"
 
 #include <cstdint>
 
@@ -19,20 +21,18 @@ struct SynthEvent {
 };
 
 
-static constexpr size_t kEventQueueSize = 256;
 
-static constexpr int kSpectrumBlock = 1024;
-static float spectrumTap[kSpectrumBlock];
-static int spectrumTapPtr = 0;
+
+
 extern "C" void pushAudio(const float *data);
 
 
 class WaveTableSynthesizerSource : public IRenderableAudio {
 public:
-    float waveformData[256];
-    int waveformDataPtr = 0;
 
-    WaveTableSynthesizerSource(int32_t sampleRate, int32_t channelCount) {
+    PinnedSnapshot<AudioBlock> visualInputSnapshot;
+
+    WaveTableSynthesizerSource(int32_t sampleRate, int32_t channelCount){
         mChannelCount = channelCount;
         mSampleRate = sampleRate;
         PlayerInit(&player);
@@ -56,35 +56,27 @@ public:
     void renderAudio(float *audioData, int32_t numFrames) override {
 
         SynthEvent evt;
-        while (eventQueue.pop(evt)) {
-            if (evt.type == SynthEvent::NoteOn) {
-                NoteOn(&player.mainSynthesizer, evt.note);
-            }
-        }
+
 
         for (int i = 0; i < numFrames; ++i) {
+            while (eventQueue.pop(evt)) {
+                if (evt.type == SynthEvent::NoteOn) {
+                    NoteOn(&player.mainSynthesizer, evt.note);
+                }
+            }
             Player32kProc(&player);
             audioData[i] = (float) (player.mainSynthesizer.mixOut >> 8) / (float) 32768 * 0.5;
 
-
             // ======== 频谱 tap（新增） ========
-            spectrumTap[spectrumTapPtr++] = audioData[i];
-            if (spectrumTapPtr == kSpectrumBlock) {
-                pushAudio(spectrumTap);   // 🚀 非阻塞
-                spectrumTapPtr = 0;
+            pcmSamples[rawPCMTapPtr++] = audioData[i];
+            if (rawPCMTapPtr == 1024) {
+                auto* block = visualInputSnapshot.beginWrite();
+                memcpy(block->samples,pcmSamples,sizeof(block->samples));
+                visualInputSnapshot.endWrite(block);
+                rawPCMTapPtr = 0;
             }
             // =================================
-
             PlayerProcess(&player);
-            if (i % 4 == 0) {
-                if (waveformDataPtr < sizeof(waveformData)) {
-                    waveformData[waveformDataPtr] = audioData[i];
-                    waveformDataPtr++;
-                } else {
-                    waveformDataPtr = 0;
-                }
-            }
-
         }
 
 
@@ -108,7 +100,9 @@ private:
     int mChannelCount;
     int mSampleRate;
     Player player;
-    LockFreeQueue<SynthEvent, kEventQueueSize> eventQueue;
+    LockFreeQueue<SynthEvent, 32> eventQueue;
+    float pcmSamples[1024];
+    int rawPCMTapPtr = 0;
 };
 
 #endif //MEGADRONE_SYNTH_H
