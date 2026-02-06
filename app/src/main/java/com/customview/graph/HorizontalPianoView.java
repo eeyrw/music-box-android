@@ -46,7 +46,7 @@ public class HorizontalPianoView extends View {
 
     private long attackTimeMs = 20;   // ms
 
-    private long releaseTimeMs = 100;  // ms
+    private long releaseTimeMs = 60;  // ms
 
     // 高亮颜色，可外部设置
     private int highlightColor = Color.YELLOW;
@@ -122,7 +122,7 @@ public class HorizontalPianoView extends View {
     @Override
     protected void onDraw(Canvas canvas) {
         long now = System.currentTimeMillis();
-
+        boolean anyAlpha = false;
         canvas.save();
         canvas.translate(-scrollX, 0); // 平移画布，键盘随 scrollX 移动
 
@@ -140,6 +140,7 @@ public class HorizontalPianoView extends View {
                     whitePaint.setColor(highlightColor); // 使用可设置高亮色
                     whitePaint.setAlpha((int) (255 * alpha));
                     canvas.drawRect(x, 0, x + whiteKeyWidth, keyHeight, whitePaint);
+                    anyAlpha = true;
                 }
 
                 // 白键边线
@@ -149,10 +150,6 @@ public class HorizontalPianoView extends View {
                 x += whiteKeyWidth;
             }
         }
-
-
-        // 绘制可视范围内 C 音标签
-        drawWhiteKeyLabels(canvas);
 
         // 黑键
         for (PianoKey key : keys) {
@@ -169,16 +166,22 @@ public class HorizontalPianoView extends View {
                     blackPaint.setColor(highlightColor);
                     blackPaint.setAlpha((int) (255 * alpha));
                     canvas.drawRect(pos, 0, pos + blackKeyWidth, blackKeyHeight, blackPaint);
+                    anyAlpha = true;
                 }
             }
         }
 
+        // 绘制可视范围内 C 音标签
+        drawWhiteKeyLabels(canvas);
         // 左右辉光
         drawGlow(canvas);
 
         canvas.restore();
 
-        postInvalidateOnAnimation();
+        if (anyAlpha) {
+            // 只有有按键高亮时，才继续下一帧动画
+            postInvalidateOnAnimation();
+        }
     }
 
     private void drawGlow(Canvas canvas) {
