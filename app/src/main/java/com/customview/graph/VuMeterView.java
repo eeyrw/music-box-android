@@ -29,6 +29,13 @@ public class VuMeterView extends View {
     // 最新 VuLevel 数据
     private VuLevel vuLevel = new VuLevel();
 
+    // 默认颜色
+    private int barColor = Color.WHITE;
+    private int lineColor = Color.WHITE;
+    private int textColor = Color.WHITE;
+    private int gridColor = Color.WHITE;
+    private int backgroundColor = Color.DKGRAY;
+
     public VuMeterView(Context context) {
         this(context, null);
     }
@@ -38,20 +45,20 @@ public class VuMeterView extends View {
 
         barPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         barPaint.setStyle(Paint.Style.FILL);
-        barPaint.setColor(Color.WHITE);
+        barPaint.setColor(barColor);
 
         linePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         linePaint.setStrokeWidth(2f);
-        linePaint.setColor(Color.WHITE);
+        linePaint.setColor(lineColor);
 
         textPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         textPaint.setTextSize(28f);
-        textPaint.setColor(Color.WHITE);
+        textPaint.setColor(textColor);
 
         gridPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         gridPaint.setStrokeWidth(1f);
         gridPaint.setAlpha(120);
-        gridPaint.setColor(Color.WHITE);
+        gridPaint.setColor(gridColor);
     }
 
     /**
@@ -72,7 +79,7 @@ public class VuMeterView extends View {
         int h = getHeight();
         if (w <= 0 || h <= 0) return;
 
-        canvas.drawColor(Color.DKGRAY);
+        canvas.drawColor(backgroundColor);
 
         float textArea = 50f; // 数字区域宽度
         float tickArea = 20f; // 刻度线区域宽度
@@ -110,5 +117,56 @@ public class VuMeterView extends View {
         float norm = (db - DB_FLOOR) / (0f - DB_FLOOR);
         norm = Math.max(0f, Math.min(1f, norm));
         return height * (1f - norm);
+    }
+
+    // -------------------- Getter / Setter --------------------
+
+    public int getBarColor() {
+        return barColor;
+    }
+
+    public void setBarColor(int color) {
+        this.barColor = color;
+        barPaint.setColor(color);
+        invalidate();
+    }
+
+    public int getLineColor() {
+        return lineColor;
+    }
+
+    public void setLineColor(int color) {
+        this.lineColor = color;
+        linePaint.setColor(color);
+        invalidate();
+    }
+
+    public int getTextColor() {
+        return textColor;
+    }
+
+    public void setTextColor(int color) {
+        this.textColor = color;
+        textPaint.setColor(color);
+        invalidate();
+    }
+
+    public int getGridColor() {
+        return gridColor;
+    }
+
+    public void setGridColor(int color) {
+        this.gridColor = color;
+        gridPaint.setColor(color);
+        invalidate();
+    }
+
+    public int getBackgroundColor() {
+        return backgroundColor;
+    }
+
+    public void setBackgroundColor(int color) {
+        this.backgroundColor = color;
+        invalidate();
     }
 }

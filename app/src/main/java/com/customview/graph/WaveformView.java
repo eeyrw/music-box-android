@@ -49,9 +49,6 @@ public class WaveformView extends View {
         return Math.max(-1f, Math.min(1f, v));
     }
 
-    private static float clamp01(float v) {
-        return Math.max(0f, Math.min(1f, v));
-    }
 
     // ================== 初始化 ==================
     private void init(AttributeSet attrs, int defStyle) {

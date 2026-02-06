@@ -4,6 +4,8 @@ import android.content.Context;
 import android.util.AttributeSet;
 import android.view.ViewGroup;
 
+import com.yuan.music_box.R;
+
 public class AudioMeterView extends ViewGroup {
 
     private final WaveformView waveformView;
@@ -18,6 +20,8 @@ public class AudioMeterView extends ViewGroup {
         waveformView = new WaveformView(context);
         spectrumView = new SpectrumView(context);
         vuMeterView = new VuMeterView(context);
+
+        vuMeterView.setLineColor(getResources().getColor(R.color.colorPrimary));
 
         addView(waveformView);
         addView(spectrumView);
