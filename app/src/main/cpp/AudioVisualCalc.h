@@ -7,74 +7,46 @@
 #include "PinnedSnapshot.h"
 
 /*
- * ===============================
- * 全局配置参数
- * ===============================
+ * =========================================================
+ * 全局配置
+ * =========================================================
  */
 
-// 音频采样率（Hz）
-#define SAMPLE_RATE 32000
-
-// 每次处理的音频 block 大小
-// 同时也是 FFT 的长度
-#define AUDIO_BLOCK 1024
-
-// 频谱显示的频段数
-#define SPECTRUM_BANDS 128
-
-// 波形显示的采样点数
-#define VISUAL_POINTS 256
-
-
-// 抽帧间隔（MS）
+#define SAMPLE_RATE        32000
+#define AUDIO_BLOCK        1024
+#define SPECTRUM_BANDS     128
+#define VISUAL_POINTS      256
 #define EXTRACT_INTERVAL_MS 20
 
 /*
- * ===============================
- * 音频块（来自音频回调）
- * ===============================
+ * =========================================================
+ * 音频与可视化数据结构
+ * =========================================================
  */
+
 struct AudioBlock {
     float samples[AUDIO_BLOCK];
 };
 
-
-/*
- * ===============================
- * 频谱输出帧（给 GUI 用）
- * 每一帧 = 一个完整频谱快照
- * ===============================
- */
 struct SpectrumFrame {
     float bands[SPECTRUM_BANDS];
 };
 
-
-/*
- * ===============================
- * 波形输出帧（给 GUI 用）
- * ===============================
- */
 struct WaveformFrame {
     float waveform[VISUAL_POINTS];
 };
 
-
 /*
- * ===============================
+ * =========================================================
  * 二阶 IIR 滤波器（Direct Form I）
- * ===============================
+ * =========================================================
  *
- * y[n] = b0*x[n] + b1*x[n-1] + b2*x[n-2]
- *        - a1*y[n-1] - a2*y[n-2]
- *
- * 这里用 z1/z2 保存历史状态
+ * ⚠️ 有状态，历史样本 z1/z2 必须能 reset
  */
 struct Biquad {
-    float b0, b1, b2;
-    float a1, a2;
+    float b0{}, b1{}, b2{};
+    float a1{}, a2{};
 
-    // 延迟状态
     float z1 = 0.0f;
     float z2 = 0.0f;
 
@@ -84,30 +56,49 @@ struct Biquad {
         z2 = b2 * x - a2 * y;
         return y;
     }
+
+    // ⭐ reset 清空滤波器历史状态
+    inline void reset() {
+        z1 = 0.0f;
+        z2 = 0.0f;
+    }
 };
 
+/*
+ * =========================================================
+ * 四阶带通滤波器 = 两个 biquad 串联
+ * =========================================================
+ */
+struct MultiBiquad {
+    Biquad stages[2];
+
+    inline float process(float x) {
+        x = stages[0].process(x);
+        x = stages[1].process(x);
+        return x;
+    }
+
+    // ⭐ reset 清空两个二阶滤波器历史状态
+    inline void reset() {
+        stages[0].reset();
+        stages[1].reset();
+    }
+};
 
 /*
- * ===============================
- * Envelope Follower（sample 域）
- * ===============================
- *
- * 用于能量包络提取：
- * - 上升快（attack）
- * - 下降慢（release）
- *
- * 注意：这是 sample 级的
+ * =========================================================
+ * 包络跟随器（sample 域）
+ * =========================================================
  */
 struct Envelope {
     float value = 0.0f;
-    float attack;
-    float release;
+    float attack{};
+    float release{};
 
     Envelope() = default;
 
-    // attack / release 以毫秒为单位
     Envelope(float attackMs, float releaseMs) {
-        attack  = std::exp(-1.0f / (attackMs  * 0.001f * SAMPLE_RATE));
+        attack = std::exp(-1.0f / (attackMs * 0.001f * SAMPLE_RATE));
         release = std::exp(-1.0f / (releaseMs * 0.001f * SAMPLE_RATE));
     }
 
@@ -119,56 +110,37 @@ struct Envelope {
             value = release * value + (1.0f - release) * v;
         return value;
     }
+
+    // ⭐ reset = 清零包络历史
+    inline void reset(float v = 0.0f) {
+        value = v;
+    }
 };
 
-
 /*
- * ===============================
- * Frame-domain Smoother（固定 dt 版本）
- * ===============================
- *
- * - dt 在构造时固定（秒）
- * - attack / release 用毫秒描述
- * - 运行期无 exp，开销极小
- *
- * 适合：
- * - 固定 20~30ms 的视觉线程
- * - 频谱 / VU / 能量显示
+ * =========================================================
+ * Frame-domain 平滑器（固定 dt）
+ * =========================================================
  */
 struct FrameSmoother {
     float value = 0.0f;
-
-    // 已经计算好的平滑系数
-    float attackAlpha;
-    float releaseAlpha;
+    float attackAlpha{};
+    float releaseAlpha{};
 
     FrameSmoother() = default;
 
-    /*
-     * dtMs       : 帧间隔（毫秒），例如 20 / 30
-     * attackMs   : 上升时间常数
-     * releaseMs  : 下降时间常数
-     */
-    FrameSmoother(float dtMs,
-                  float attackMs,
-                  float releaseMs)
-    {
+    FrameSmoother(float dtMs, float attackMs, float releaseMs) {
         float dt = dtMs * 0.001f;
 
-        // 防御：避免除零
-        if (attackMs <= 0.0f) {
+        if (attackMs <= 0.0f)
             attackAlpha = 1.0f;
-        } else {
-            float Ta = attackMs * 0.001f;
-            attackAlpha = 1.0f - std::exp(-dt / Ta);
-        }
+        else
+            attackAlpha = 1.0f - std::exp(-dt / (attackMs * 0.001f));
 
-        if (releaseMs <= 0.0f) {
+        if (releaseMs <= 0.0f)
             releaseAlpha = 1.0f;
-        } else {
-            float Tr = releaseMs * 0.001f;
-            releaseAlpha = 1.0f - std::exp(-dt / Tr);
-        }
+        else
+            releaseAlpha = 1.0f - std::exp(-dt / (releaseMs * 0.001f));
     }
 
     inline float process(float x) {
@@ -176,89 +148,198 @@ struct FrameSmoother {
             value += attackAlpha * (x - value);
         else
             value += releaseAlpha * (x - value);
-
         return value;
     }
-};
 
-
-/*
- * ===============================
- * 四阶带通滤波器
- * ===============================
- *
- * 两个二阶 biquad 串联
- * 用于 filterbank 频谱分析
- */
-struct MultiBiquad {
-    Biquad stages[2];
-
-    float process(float x) {
-        x = stages[0].process(x);
-        x = stages[1].process(x);
-        return x;
+    // ⭐ reset 清空跨帧历史
+    inline void reset(float v = 0.0f) {
+        value = v;
     }
 };
 
-
 /*
  * =========================================================
- * WaveformProcessor
+ * 波形处理器（触发 + 采样）
  * =========================================================
- *
- * 将 AUDIO_BLOCK 下采样成 VISUAL_POINTS
- * 仅用于波形显示（不是频谱）
  */
 class WaveformProcessor {
 public:
-    void processBlock(const AudioBlock& blk) {
-        constexpr int step = AUDIO_BLOCK / VISUAL_POINTS;
-        static_assert(AUDIO_BLOCK % VISUAL_POINTS == 0);
+    float triggerLevel = 0.1f;
+    float minAvailableRatio = 0.5f;
 
-        auto* p = waveformSnapshot.beginWrite();
+    void processBlock(const AudioBlock &blk) {
+        int triggerPos = findTrigger(blk);
+        int available = AUDIO_BLOCK - triggerPos;
+        int minAvailable = (int) (AUDIO_BLOCK * minAvailableRatio);
+
+        if (available < minAvailable)
+            return;
+
+        float step = (float) available / VISUAL_POINTS;
+
+        auto *p = waveformSnapshot.beginWrite();
         if (!p) return;
 
         for (int i = 0; i < VISUAL_POINTS; i++) {
-            float sum = 0.0f;
-            for (int j = 0; j < step; j++)
-                sum += blk.samples[i * step + j];
-
-            p->waveform[i] = sum / step;
+            int idx = triggerPos + (int) (i * step);
+            if (idx >= AUDIO_BLOCK)
+                idx = AUDIO_BLOCK - 1;
+            p->waveform[i] = blk.samples[idx];
         }
 
         waveformSnapshot.endWrite(p);
     }
 
+    // ⭐ reset 清空 waveform 输出，避免残影
+    void reset() {
+        if (auto *p = waveformSnapshot.beginWrite()) {
+            std::memset(p->waveform, 0, sizeof(p->waveform));
+            waveformSnapshot.endWrite(p);
+        }
+    }
+
     PinnedSnapshot<WaveformFrame> waveformSnapshot;
+
+private:
+    int findTrigger(const AudioBlock &blk) {
+        for (int i = 1; i < AUDIO_BLOCK; i++) {
+            if (blk.samples[i - 1] < triggerLevel &&
+                blk.samples[i] >= triggerLevel)
+                return i;
+        }
+        return 0;
+    }
 };
 
 
 /*
  * =========================================================
- * FrameSpectrumProcessor4th
+ * VuMeterProcessor
  * =========================================================
  *
- * 频谱方案 1：
- * - 四阶带通 filterbank
- * - 每帧 RMS 能量
- * - frame smoothing（linear 域）
+ * - 计算 RMS / Peak / PeakHold（dBFS）
+ * - 复用 FrameSmoother 做平滑
+ * - GUI 只读取 PinnedSnapshot
+ * - 支持 reset
+ */
+struct VuLevel {
+    float rmsDb = -60.0f;
+    float peakDb = -60.0f;
+    float peakHoldDb = -60.0f;
+};
+
+class VuMeterProcessor {
+public:
+    VuMeterProcessor() {
+        rmsSmoother = FrameSmoother(EXTRACT_INTERVAL_MS, 10.f, 50.f);
+        peakSmoother = FrameSmoother(EXTRACT_INTERVAL_MS, 10.f, 50.f);
+    }
+
+    /*
+     * 处理每个音频 block
+     */
+    void processBlock(const AudioBlock &blk) {
+        float sumSq = 0.0f;
+        float peak = 0.0f;
+
+        for (int i = 0; i < AUDIO_BLOCK; i++) {
+            float s = blk.samples[i];
+            sumSq += s * s;
+            peak = std::max(peak, std::fabs(s));
+        }
+
+        // 线性 RMS / Peak 平滑
+        float rmsLin = rmsSmoother.process(std::sqrt(sumSq / AUDIO_BLOCK));
+        float peakLin = peakSmoother.process(peak);
+
+        float rmsDb = linearToDb(rmsLin);
+        float peakDb = linearToDb(peakLin);
+
+        uint64_t nowMs = getTimeMs();
+
+        // Peak Hold
+        if (peakDb >= peakHoldDb) {
+            peakHoldDb = peakDb;
+            lastPeakTimeMs = nowMs;
+        } else if (nowMs - lastPeakTimeMs > PEAK_HOLD_MS) {
+            peakHoldDb -= PEAK_FALL_DB;
+            if (peakHoldDb < peakDb)
+                peakHoldDb = peakDb;
+        }
+
+        // 写入 snapshot，GUI 直接读取
+        auto *pFrame = snapshot.beginWrite();
+        if (!pFrame) return;
+
+        pFrame->rmsDb = rmsDb;
+        pFrame->peakDb = peakDb;
+        pFrame->peakHoldDb = peakHoldDb;
+
+        snapshot.endWrite(pFrame);
+    }
+
+    /*
+     * 重置所有状态
+     */
+    void reset() {
+        rmsSmoother.reset(0.0f);
+        peakSmoother.reset(0.0f);
+        peakHoldDb = DB_FLOOR;
+        lastPeakTimeMs = 0;
+
+        if (auto *pFrame = snapshot.beginWrite()) {
+            std::memset(pFrame, 0, sizeof(VuLevel));
+            snapshot.endWrite(pFrame);
+        }
+    }
+
+    PinnedSnapshot<VuLevel> snapshot;
+
+private:
+    FrameSmoother rmsSmoother;
+    FrameSmoother peakSmoother;
+
+    float peakHoldDb = DB_FLOOR;
+    uint64_t lastPeakTimeMs = 0;
+
+    static constexpr float DB_FLOOR = -60.0f;
+    static constexpr long PEAK_HOLD_MS = 600;   // ms
+    static constexpr float PEAK_FALL_DB = 1.2f;
+
+    inline float linearToDb(float x) {
+        return 20.0f * std::log10(std::max(1e-6f, x));
+    }
+
+    // 简单时间获取函数，可根据实际平台改
+    inline uint64_t getTimeMs() {
+        // C++11 chrono
+        using namespace std::chrono;
+        return duration_cast<milliseconds>(
+                steady_clock::now().time_since_epoch()
+        ).count();
+    }
+};
+
+
+/*
+ * =========================================================
+ * FrameSpectrumProcessor4th（四阶 filterbank + RMS + frame smoother）
+ * =========================================================
  */
 class FrameSpectrumProcessor4th {
 public:
     FrameSpectrumProcessor4th() {
         initFilters();
-
-        // 每个频段一个 frame smoother
         for (int i = 0; i < SPECTRUM_BANDS; i++)
-            smoothers[i] = FrameSmoother(EXTRACT_INTERVAL_MS,30.f, 120.f);
+            smoothers[i] = FrameSmoother(EXTRACT_INTERVAL_MS, 20.f, 100.f);
     }
 
-    const float* getFrequencies() const { return freqs; }
+    const float *getFrequencies() const { return freqs; }
 
     void processBlock(const AudioBlock& blk) {
         float energy[SPECTRUM_BANDS] = {};
 
-        // sample 域能量累计
+        // 样本级能量累加
         for (int i = 0; i < AUDIO_BLOCK; i++) {
             float x = blk.samples[i];
             for (int b = 0; b < SPECTRUM_BANDS; b++) {
@@ -271,17 +352,25 @@ public:
         if (!pFrame) return;
 
         for (int b = 0; b < SPECTRUM_BANDS; b++) {
-            // RMS（linear）
             float rms = std::sqrt(energy[b] / AUDIO_BLOCK);
-
-            // ⭐ frame 间平滑发生在这里
             float lin = smoothers[b].process(rms);
-
-            // 最后才转 dB
             pFrame->bands[b] = 20.0f * std::log10f(lin + 1e-6f);
         }
 
         spectrumSnapshot.endWrite(pFrame);
+    }
+
+    // ⭐ reset = 清空滤波历史 + 平滑历史 + GUI 输出
+    void reset() {
+        for (int b = 0; b < SPECTRUM_BANDS; b++) {
+            filters[b].reset();
+            smoothers[b].reset(0.0f);
+        }
+
+        if (auto *pFrame = spectrumSnapshot.beginWrite()) {
+            std::memset(pFrame->bands, 0, sizeof(pFrame->bands));
+            spectrumSnapshot.endWrite(pFrame);
+        }
     }
 
     PinnedSnapshot<SpectrumFrame> spectrumSnapshot;
@@ -327,17 +416,10 @@ private:
     }
 };
 
-
 /*
  * =========================================================
- * SpectrumProcessorFFT
+ * SpectrumProcessorFFT（Hann window + FFT + frame smoother）
  * =========================================================
- *
- * 频谱方案 2：
- * - Hann 窗
- * - FFT
- * - bin → band
- * - frame smoothing（linear 域）
  */
 class SpectrumProcessorFFT {
 public:
@@ -346,11 +428,10 @@ public:
 
         for (int i = 0; i < SPECTRUM_BANDS; i++) {
             float t = (float)i / SPECTRUM_BANDS;
-            bandBins[i] = std::min((int)(t * (N / 2)), N / 2 - 1);
-            smoothers[i] = FrameSmoother(EXTRACT_INTERVAL_MS,30.f, 120.f);
+            bandBins[i] = std::min((int) (t * (N / 2)), N / 2 - 1);
+            smoothers[i] = FrameSmoother(EXTRACT_INTERVAL_MS, 30.f, 120.f);
         }
 
-        // Hann window
         window.resize(N);
         for (int i = 0; i < N; i++)
             window[i] = 0.5f * (1.0f - std::cos(2.0f * M_PI * i / (N - 1)));
@@ -376,16 +457,26 @@ public:
         spectrumSnapshot.endWrite(pFrame);
     }
 
+    // ⭐ reset = 清空 frame smoother 历史 + GUI 输出
+    void reset() {
+        for (int b = 0; b < SPECTRUM_BANDS; b++)
+            smoothers[b].reset(0.0f);
+
+        if (auto *pFrame = spectrumSnapshot.beginWrite()) {
+            std::memset(pFrame->bands, 0, sizeof(pFrame->bands));
+            spectrumSnapshot.endWrite(pFrame);
+        }
+    }
+
     PinnedSnapshot<SpectrumFrame> spectrumSnapshot;
 
 private:
-    int N;
-    int bandBins[SPECTRUM_BANDS];
+    int N{};
+    int bandBins[SPECTRUM_BANDS]{};
     FrameSmoother smoothers[SPECTRUM_BANDS];
     std::vector<float> window;
 
-    // 递归 radix-2 FFT
-    void fftRecursive(std::vector<std::complex<float>>& a) {
+    void fftRecursive(std::vector<std::complex<float>> &a) {
         int n = a.size();
         if (n <= 1) return;
 

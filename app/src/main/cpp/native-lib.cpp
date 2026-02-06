@@ -135,6 +135,39 @@ Java_com_yuan_midiplayer_MusicBoxEngine_nativeGetSpectrumData(JNIEnv *env, jclas
     return jarr;
 }
 
+
+extern "C"
+JNIEXPORT jobject JNICALL
+Java_com_yuan_midiplayer_MusicBoxEngine_nativeGetVuLevel(JNIEnv *env, jclass thiz,
+                                                         jlong engine_handle) {
+    auto *engine = reinterpret_cast<MusicBoxEngine *>(engine_handle);
+    if (engine) {
+        const VuLevel *frame = engine->vuMeterProcessor.snapshot.beginRead();
+        if (!frame) return nullptr;
+
+        jclass cls = env->FindClass("com/customview/graph/VuLevel");
+        jmethodID ctor = env->GetMethodID(cls, "<init>", "()V");
+        jobject obj = env->NewObject(cls, ctor);
+
+        jfieldID fidRms = env->GetFieldID(cls, "rmsDb", "F");
+        jfieldID fidPeak = env->GetFieldID(cls, "peakDb", "F");
+        jfieldID fidHold = env->GetFieldID(cls, "peakHoldDb", "F");
+
+        env->SetFloatField(obj, fidRms, frame->rmsDb);
+        env->SetFloatField(obj, fidPeak, frame->peakDb);
+        env->SetFloatField(obj, fidHold, frame->peakHoldDb);
+
+        engine->vuMeterProcessor.snapshot.endRead(frame);
+
+        return obj;
+    } else {
+        LOGE("Engine handle is invalid, call createEngine() to create a new one");
+        return nullptr;
+    }
+
+
+}
+
 extern "C"
 JNIEXPORT void JNICALL
 Java_com_yuan_midiplayer_MusicBoxEngine_nativeResetSynthesizer(JNIEnv *env, jclass clazz,

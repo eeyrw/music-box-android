@@ -17,6 +17,7 @@ import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.customview.graph.AudioMeterView;
+import com.customview.graph.VuLevel;
 import com.yuan.midiplayer.MidiPlayer;
 import com.yuan.midiplayer.MidiPlayerEventListener;
 import com.yuan.midiplayer.Player;
@@ -150,12 +151,12 @@ public class MainActivity extends AppCompatActivity {
             }
 
             @Override
-            public void onVisualChangeChange(float[] waveform, float[] spectrum) {
+            public void onVisualChangeChange(float[] waveform, float[] spectrum, VuLevel vuLevel) {
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
 
-                        meterView.pushAudioFrame(waveform, spectrum);
+                        meterView.pushAudioFrame(waveform, spectrum, vuLevel);
                     }
                 });
             }

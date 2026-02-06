@@ -93,7 +93,9 @@ public class MidiPlayer extends Player {
             visualizeTask = new TimerTask() {
                 @Override
                 public void run() {
-                    mListener.onVisualChangeChange(mEngine.getWaveformData(), mEngine.getSpectrumData());
+                    mListener.onVisualChangeChange(mEngine.getWaveformData(),
+                            mEngine.getSpectrumData(),
+                            mEngine.getVuLevelData());
                 }
             };
         }

@@ -69,9 +69,9 @@ public:
 
             // ======== 频谱 tap（新增） ========
             pcmSamples[rawPCMTapPtr++] = audioData[i];
-            if (rawPCMTapPtr == 1024) {
-                auto* block = visualInputSnapshot.beginWrite();
-                memcpy(block->samples,pcmSamples,sizeof(block->samples));
+            if (rawPCMTapPtr == AUDIO_BLOCK) {
+                auto *block = visualInputSnapshot.beginWrite();
+                memcpy(block->samples, pcmSamples, sizeof(block->samples));
                 visualInputSnapshot.endWrite(block);
                 rawPCMTapPtr = 0;
             }
@@ -101,7 +101,7 @@ private:
     int mSampleRate;
     Player player;
     LockFreeQueue<SynthEvent, 32> eventQueue;
-    float pcmSamples[1024];
+    float pcmSamples[AUDIO_BLOCK];
     int rawPCMTapPtr = 0;
 };
 

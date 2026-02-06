@@ -36,6 +36,7 @@ public:
 
     FrameSpectrumProcessor4th spectrumProcessor;
     WaveformProcessor waveformProcessor;
+    VuMeterProcessor vuMeterProcessor;
 
 private:
     oboe::ManagedStream mStream;

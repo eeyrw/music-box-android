@@ -7,22 +7,27 @@ import android.graphics.Paint;
 import android.util.AttributeSet;
 import android.view.View;
 
+/**
+ * VuMeterView
+ * <p>
+ * - 纯显示控件
+ * - 数据由外部传入 VuLevel
+ * - 不做任何 RMS/Peak 平滑或 PeakHold 计算
+ */
 public class VuMeterView extends View {
 
     private static final float DB_FLOOR = -60f;
-    private static final long PEAK_HOLD_MS = 600;
-    private static final float PEAK_FALL_DB = 1.2f;
-
     private static final float[] DB_MARKS = {0f, -6f, -12f, -24f, -48f};
     private static final String DB_UNIT = "dBFS";
+
+    // 绘制对象
     private final Paint barPaint;
     private final Paint linePaint;
     private final Paint textPaint;
     private final Paint gridPaint;
-    private float mRmsDb = DB_FLOOR;
-    private float mPeakDb = DB_FLOOR;
-    private float mPeakHoldDb = DB_FLOOR;
-    private long mLastPeakTime;
+
+    // 最新 VuLevel 数据
+    private VuLevel vuLevel = new VuLevel();
 
     public VuMeterView(Context context) {
         this(context, null);
@@ -50,24 +55,13 @@ public class VuMeterView extends View {
     }
 
     /**
-     * 设置 RMS 和 Peak 数据
+     * 外部调用，传入最新 VuLevel
      */
-    public void setLevels(float rmsDb, float peakDb) {
-        mRmsDb = rmsDb;
-        mPeakDb = peakDb;
-
-        long now = System.currentTimeMillis();
-        if (peakDb >= mPeakHoldDb) {
-            mPeakHoldDb = peakDb;
-            mLastPeakTime = now;
-        } else if (now - mLastPeakTime > PEAK_HOLD_MS) {
-            mPeakHoldDb -= PEAK_FALL_DB;
-            if (mPeakHoldDb < mPeakDb) {
-                mPeakHoldDb = mPeakDb;
-            }
+    public void setVuLevel(VuLevel level) {
+        if (level != null) {
+            this.vuLevel = level;
+            postInvalidateOnAnimation();
         }
-
-        postInvalidateOnAnimation();
     }
 
     @Override
@@ -80,49 +74,41 @@ public class VuMeterView extends View {
 
         canvas.drawColor(Color.DKGRAY);
 
-        float textArea = 50f; // 数字显示区
-        float tickArea = 20f; // 刻度线区
+        float textArea = 50f; // 数字区域宽度
+        float tickArea = 20f; // 刻度线区域宽度
         float barLeft = textArea + tickArea;
         float barRight = w;
 
         Paint.FontMetrics fm = textPaint.getFontMetrics();
 
-        // RMS 条
-        float rmsY = dbToY(mRmsDb, h);
+        // --- 绘制 RMS 条 ---
+        float rmsY = dbToY(vuLevel.rmsDb, h);
         canvas.drawRect(barLeft, rmsY, barRight, h, barPaint);
 
-        // Peak Hold 线
-        float peakY = dbToY(mPeakHoldDb, h);
+        // --- 绘制 PeakHold 线 ---
+        float peakY = dbToY(vuLevel.peakHoldDb, h);
         canvas.drawLine(barLeft, peakY, barRight, peakY, linePaint);
 
-        // --- 刻度线 + 数字 ---
-        for (int i = 0; i < DB_MARKS.length; i++) {
-            float db = DB_MARKS[i];
+        // --- 绘制刻度线和数字 ---
+        for (float db : DB_MARKS) {
             float y = dbToY(db, h);
 
             // 刻度线
             canvas.drawLine(textArea, y, textArea + tickArea, y, gridPaint);
 
             // 数字
-            String label;
-            if (db == 0f) {
-                label = "0 " + DB_UNIT; // 顶部直接显示 0 dBFS
-            } else {
-                label = String.valueOf((int) db);
-            }
-
+            String label = db == 0f ? "0 " + DB_UNIT : String.valueOf((int) db);
             float textY = y - fm.top; // 顶部对齐
             canvas.drawText(label, 4, textY, textPaint);
         }
     }
 
-
     /**
-     * dB → Y 坐标
+     * dB 转 Y 坐标
      */
-    private float dbToY(float db, int h) {
+    private float dbToY(float db, int height) {
         float norm = (db - DB_FLOOR) / (0f - DB_FLOOR);
         norm = Math.max(0f, Math.min(1f, norm));
-        return h * (1f - norm);
+        return height * (1f - norm);
     }
 }

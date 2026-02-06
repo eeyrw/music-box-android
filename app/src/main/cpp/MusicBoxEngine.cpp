@@ -115,13 +115,11 @@ void MusicBoxEngine::start() {
         LOGE("Failed to create the playback stream. Error: %s", convertToText(result));
     }
 
-
 }
 
 void MusicBoxEngine::visualCalcThread() {
     using clock = std::chrono::steady_clock;
     constexpr auto interval = std::chrono::milliseconds(EXTRACT_INTERVAL_MS);
-
     const AudioBlock* pBlk = nullptr;
     auto nextTick = clock::now();
 
@@ -132,6 +130,7 @@ void MusicBoxEngine::visualCalcThread() {
         pBlk=mAudioSource->visualInputSnapshot.beginRead();
         if (pBlk!= nullptr) {
             waveformProcessor.processBlock(*pBlk);
+            vuMeterProcessor.processBlock(*pBlk);
             spectrumProcessor.processBlock(*pBlk);
             mAudioSource->visualInputSnapshot.endRead(pBlk);
         }
