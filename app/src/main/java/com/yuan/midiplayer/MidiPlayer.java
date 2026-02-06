@@ -160,6 +160,8 @@ public class MidiPlayer extends Player {
                 final int noteTranspose = note + mTransposeValue;
                 if (noteTranspose >= 0 && noteTranspose <= 127) {
                     mEngine.noteOn(noteTranspose);
+                    mListener.onNoteOn(noteTranspose);
+
                     //Log.d(TAG, String.format("onMidiEvent: %d", noteTranspose));
                 }
             }

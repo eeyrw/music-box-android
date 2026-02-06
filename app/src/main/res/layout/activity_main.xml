@@ -25,6 +25,11 @@
             android:layout_height="150sp" />
 
 
+        <com.customview.graph.HorizontalPianoView
+            android:id="@+id/pianoView"
+            android:layout_width="match_parent"
+            android:layout_height="50sp" />
+
         <TextView
             android:id="@+id/tvPlayStatus"
             android:layout_width="match_parent"

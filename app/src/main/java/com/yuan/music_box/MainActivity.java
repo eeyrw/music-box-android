@@ -17,6 +17,7 @@ import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.customview.graph.AudioMeterView;
+import com.customview.graph.HorizontalPianoView;
 import com.customview.graph.VuLevel;
 import com.yuan.midiplayer.MidiPlayer;
 import com.yuan.midiplayer.MidiPlayerEventListener;
@@ -32,7 +33,10 @@ public class MainActivity extends AppCompatActivity {
     private MidiPlayer midiPlayer;
     private String midiFilePath;
 
+    private HorizontalPianoView pianoView;
+
     private AudioMeterView meterView;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         Log.d(TAG, "onCreate");
@@ -40,6 +44,15 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         meterView = findViewById(R.id.audio_meter);
+
+        pianoView = findViewById(R.id.pianoView);
+        // 设置 noteOn only 模式
+        pianoView.setNoteOnOnlyMode(true);
+
+        // 设置 attack/release 时间
+        pianoView.setAttackRelease(100, 300);
+
+        pianoView.setHighlightColor(getResources().getColor(R.color.colorPrimary));
 
         final TextView tvPlayStatus = findViewById(R.id.tvPlayStatus);
 
@@ -157,6 +170,17 @@ public class MainActivity extends AppCompatActivity {
                     public void run() {
 
                         meterView.pushAudioFrame(waveform, spectrum, vuLevel);
+                    }
+                });
+            }
+
+            @Override
+            public void onNoteOn(int note) {
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+
+                        pianoView.noteOn(note, 1.0f);
                     }
                 });
             }
