@@ -10,7 +10,7 @@ import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Button;
-import android.widget.SeekBar;
+import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -18,6 +18,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.customview.graph.AudioMeterView;
 import com.customview.graph.HorizontalPianoView;
+import com.customview.graph.TransposeSliderView;
 import com.customview.graph.VuLevel;
 import com.yuan.midiplayer.MidiPlayer;
 import com.yuan.midiplayer.MidiPlayerEventListener;
@@ -37,6 +38,8 @@ public class MainActivity extends AppCompatActivity {
 
     private AudioMeterView meterView;
 
+    private TransposeSliderView transposeSlider;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         Log.d(TAG, "onCreate");
@@ -54,9 +57,14 @@ public class MainActivity extends AppCompatActivity {
 
         pianoView.setHighlightColor(getResources().getColor(R.color.colorPrimary));
 
+        transposeSlider = findViewById(R.id.transposeSlider);
+
         final TextView tvPlayStatus = findViewById(R.id.tvPlayStatus);
 
-        Button btnStop = findViewById(R.id.btnStop);
+        ImageButton btnStop = findViewById(R.id.btnStop);
+
+        final TextView tvFileName = findViewById(R.id.tvFileName);
+        tvFileName.setSelected(true);
         btnStop.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -64,7 +72,7 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        Button btnPause = findViewById(R.id.btnPause);
+        ImageButton btnPause = findViewById(R.id.btnPause);
         btnPause.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -72,7 +80,7 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        Button btnPlay = findViewById(R.id.btnPlay);
+        ImageButton btnPlay = findViewById(R.id.btnPlay);
         btnPlay.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -90,7 +98,7 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        Button btnChooseMidi = findViewById(R.id.btnChooseMIdi);
+        Button btnChooseMidi = findViewById(R.id.btnChooseMidi);
         btnChooseMidi.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -112,26 +120,36 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        SeekBar sbTranspose = findViewById(R.id.sbTranspose);
-        sbTranspose.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-            @Override
-            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                int transposeValue = progress - 24;
-                midiPlayer.setTranspose(transposeValue);
-                TextView tvTransposeValue = findViewById(R.id.tvTransposeValue);
-                tvTransposeValue.setText(String.format("Transpose: %d half-tone", transposeValue));
-            }
 
-            @Override
-            public void onStartTrackingTouch(SeekBar seekBar) {
+        // 监听移调变化
+        transposeSlider.setOnSemitoneChangeListener(semitone -> {
 
-            }
+            TextView tvTransposeValue = findViewById(R.id.tvTransposeValue);
+            tvTransposeValue.setText(String.format("Transpose: %d half-tone", semitone));
 
-            @Override
-            public void onStopTrackingTouch(SeekBar seekBar) {
-
-            }
+            midiPlayer.setTranspose(semitone);
         });
+
+//        SeekBar sbTranspose = findViewById(R.id.sbTranspose);
+//        sbTranspose.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+//            @Override
+//            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+//                int transposeValue = progress - 24;
+//                midiPlayer.setTranspose(transposeValue);
+//                TextView tvTransposeValue = findViewById(R.id.tvTransposeValue);
+//                tvTransposeValue.setText(String.format("Transpose: %d half-tone", transposeValue));
+//            }
+//
+//            @Override
+//            public void onStartTrackingTouch(SeekBar seekBar) {
+//
+//            }
+//
+//            @Override
+//            public void onStopTrackingTouch(SeekBar seekBar) {
+//
+//            }
+//        });
 
 
         Intent intent = new Intent(MainActivity.this, FileListActivity.class);
@@ -154,11 +172,9 @@ public class MainActivity extends AppCompatActivity {
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        int progress = transpose + 24;
-                        SeekBar sbTranspose = findViewById(R.id.sbTranspose);
-                        sbTranspose.setProgress(progress);
+                        transposeSlider.setSemitone(transpose);
                         TextView tvTransposeValue = findViewById(R.id.tvTransposeValue);
-                        tvTransposeValue.setText(String.format("Transpose suggestion: %d half-tone", transpose));
+                        tvTransposeValue.setText(String.format("Transpose: %d half-tone", transpose));
                     }
                 });
             }

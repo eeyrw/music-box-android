@@ -48,7 +48,7 @@ public class VuMeterView extends View {
         barPaint.setColor(barColor);
 
         linePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-        linePaint.setStrokeWidth(2f);
+        linePaint.setStrokeWidth(5f);
         linePaint.setColor(lineColor);
 
         textPaint = new Paint(Paint.ANTI_ALIAS_FLAG);

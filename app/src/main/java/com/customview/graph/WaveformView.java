@@ -23,7 +23,6 @@ public class WaveformView extends View {
 
     // ================== 绘制缓存 ==================
     private Paint mWavePaint;
-    private Paint mTextPaint;
     private Paint mGridPaint;
 
     private float[] mLinePoints;
@@ -72,10 +71,6 @@ public class WaveformView extends View {
         mWavePaint.setStrokeWidth(3f);
         mWavePaint.setColor(mLineColor);
 
-        mTextPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-        mTextPaint.setStyle(Paint.Style.FILL);
-        mTextPaint.setColor(mLineColor);
-
         mGridPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         mGridPaint.setStyle(Paint.Style.STROKE);
         mGridPaint.setColor(mLineColor);
@@ -89,8 +84,6 @@ public class WaveformView extends View {
         mWidth = w;
         mHeight = h;
         mCenterY = h * 0.5f;
-
-        mTextPaint.setTextSize(h * 0.08f);
     }
 
 
@@ -101,19 +94,6 @@ public class WaveformView extends View {
 
         // 中心线
         canvas.drawLine(0, mCenterY, mWidth, mCenterY, mGridPaint);
-
-        // 标题
-        float m = mHeight * 0.05f;
-
-        if (mTitle == null || mTitle.isEmpty()) return;
-
-        Paint.FontMetrics fm = mTextPaint.getFontMetrics();
-        int h = (int) (fm.bottom - fm.top);
-        int w = (int) mTextPaint.measureText(mTitle);
-        int base = (int) (-fm.ascent);
-
-        canvas.drawText(mTitle, m, m + base, mTextPaint);
-
 
         drawWaveform(canvas);
     }
@@ -167,7 +147,6 @@ public class WaveformView extends View {
     public void setLineColor(int color) {
         mLineColor = color;
         mWavePaint.setColor(color);
-        mTextPaint.setColor(color);
         mGridPaint.setColor(color);
         invalidate();
     }
