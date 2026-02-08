@@ -17,7 +17,7 @@ import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.customview.graph.AudioMeterView;
-import com.customview.graph.HorizontalPianoView;
+import com.customview.graph.PianoRollView;
 import com.customview.graph.TransposeSliderView;
 import com.customview.graph.VuLevel;
 import com.yuan.midiplayer.MidiPlayer;
@@ -27,6 +27,7 @@ import com.yuan.midiplayer.Player;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.List;
 
 
 public class MainActivity extends AppCompatActivity {
@@ -34,7 +35,7 @@ public class MainActivity extends AppCompatActivity {
     private MidiPlayer midiPlayer;
     private String midiFilePath;
 
-    private HorizontalPianoView pianoView;
+    private PianoRollView pianoRollView;
 
     private AudioMeterView meterView;
 
@@ -48,14 +49,16 @@ public class MainActivity extends AppCompatActivity {
 
         meterView = findViewById(R.id.audio_meter);
 
-        pianoView = findViewById(R.id.pianoView);
+        pianoRollView = findViewById(R.id.pianoRollView);
         // 设置 noteOn only 模式
-        pianoView.setNoteOnOnlyMode(true);
+        //pianoView.setNoteOnOnlyMode(true);
 
         // 设置 attack/release 时间
-        pianoView.setAttackRelease(100, 300);
+        pianoRollView.setAttackRelease(100, 300);
 
-        pianoView.setHighlightColor(getResources().getColor(R.color.colorPrimary));
+        pianoRollView.setHighlightColor(getResources().getColor(R.color.colorPrimary));
+
+        pianoRollView.setFallingNoteColor(getResources().getColor(R.color.colorPrimary));
 
         transposeSlider = findViewById(R.id.transposeSlider);
 
@@ -130,27 +133,6 @@ public class MainActivity extends AppCompatActivity {
             midiPlayer.setTranspose(semitone);
         });
 
-//        SeekBar sbTranspose = findViewById(R.id.sbTranspose);
-//        sbTranspose.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-//            @Override
-//            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-//                int transposeValue = progress - 24;
-//                midiPlayer.setTranspose(transposeValue);
-//                TextView tvTransposeValue = findViewById(R.id.tvTransposeValue);
-//                tvTransposeValue.setText(String.format("Transpose: %d half-tone", transposeValue));
-//            }
-//
-//            @Override
-//            public void onStartTrackingTouch(SeekBar seekBar) {
-//
-//            }
-//
-//            @Override
-//            public void onStopTrackingTouch(SeekBar seekBar) {
-//
-//            }
-//        });
-
 
         Intent intent = new Intent(MainActivity.this, FileListActivity.class);
         startActivityForResult(intent, 0);//此处的requestCode应与下面结果处理函中调用的requestCode一致
@@ -161,7 +143,23 @@ public class MainActivity extends AppCompatActivity {
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
+
+
                         tvPlayStatus.setText(state.toString());
+
+                        switch (state) {
+                            case PLAYING:
+                                // 开始播放
+                                pianoRollView.resumePlayback();
+                                break;
+                            case PAUSE:
+                            case PAUSE_BY_OS:
+                                pianoRollView.pausePlayback();
+                                break;
+                            case STOP:
+                                pianoRollView.stopPlayback();
+                                break;
+                        }
                     }
                 });
             }
@@ -191,12 +189,27 @@ public class MainActivity extends AppCompatActivity {
             }
 
             @Override
-            public void onNoteOn(int note) {
+            public void onNoteOn(int note, long ms) {
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
 
-                        pianoView.noteOn(note, 1.0f);
+                        //pianoView.noteOn(note, 1.0f);
+                        pianoRollView.setPlaybackTime(ms);
+                    }
+                });
+            }
+
+            @Override
+            public void onGetNoteList(List<PianoRollView.NoteEvent> noteList) {
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+
+                        //pianoView.noteOn(note, 1.0f);
+                        pianoRollView.loadNoteEvents(noteList);
+                        pianoRollView.setPlaybackTime(0);  // 从头开始
+                        pianoRollView.startPlayback();      // 启动内部刷新
                     }
                 });
             }

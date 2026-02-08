@@ -118,6 +118,10 @@ public class MidiPlayer extends Player {
             MidiEventPlayer ep = new MidiEventPlayer("sd");
             mProcessor = new MidiProcessor(midi);
             mProcessor.registerEventListener(ep, NoteOn.class);
+
+            MidiHelper helper = new MidiHelper(midi);
+            mListener.onGetNoteList(helper.generateNoteEvents());
+
             play();
             // Start the processor:
         } catch (IOException e) {
@@ -160,7 +164,7 @@ public class MidiPlayer extends Player {
                 final int noteTranspose = note + mTransposeValue;
                 if (noteTranspose >= 0 && noteTranspose <= 127) {
                     mEngine.noteOn(noteTranspose);
-                    mListener.onNoteOn(noteTranspose);
+                    mListener.onNoteOn(noteTranspose, ms);
 
                     //Log.d(TAG, String.format("onMidiEvent: %d", noteTranspose));
                 }
