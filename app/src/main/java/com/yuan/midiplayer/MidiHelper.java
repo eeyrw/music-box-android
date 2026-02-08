@@ -34,69 +34,103 @@ public class MidiHelper {
     }
 
     public List<NoteEvent> generateNoteEvents() {
-        // 1. 确保 tickNoteMap 已经生成
-        getTickNoteMap();
 
         List<NoteEvent> noteEvents = new ArrayList<>();
-
-        // 临时存储激活的音符
         HashMap<Integer, NoteEvent> activeNotes = new HashMap<>();
 
+        // 1. 合并所有 Track 的事件
+        List<MidiEvent> allEvents = new ArrayList<>();
         for (MidiTrack track : mMidiFile.getTracks()) {
-            for (MidiEvent event : track.getEvents()) {
-                if (event instanceof NoteOn) {
-                    NoteOn no = (NoteOn) event;
-                    int note = no.getNoteValue();
-                    int channel = no.getChannel();
-                    int velocity = no.getVelocity();
-                    long absoluteMs = MidiUtil.ticksToMs(event.getTick(), mMPQN, mPPQ);
-                    int key = note + (channel << 8);
+            allEvents.addAll(track.getEvents());
+        }
 
-                    if (channel == 0x09) continue; // 排除打击乐
+        // 2. 按 tick 排序（这是正确处理 Tempo 的关键）
+        allEvents.sort((a, b) -> Long.compare(a.getTick(), b.getTick()));
 
-                    if (velocity == 0) {
-                        // NoteOn(0) → 视为 NoteOff
-                        NoteEvent ne = activeNotes.remove(key);
-                        if (ne != null) {
-                            ne.durationMs = absoluteMs - ne.startTimeMs;
-                            noteEvents.add(ne);
-                        }
-                    } else {
-                        // 正常 NoteOn
-                        NoteEvent ne = new NoteEvent();
-                        ne.midiNote = note;
-                        ne.startTimeMs = absoluteMs;
-                        ne.velocity = velocity / 127f;
-                        activeNotes.put(key, ne);
-                    }
+        // 3. 时间推进状态
+        int currentMPQN = Tempo.DEFAULT_MPQN;
+        long lastTick = 0;
+        long currentMs = 0;
 
-                } else if (event instanceof NoteOff) {
-                    NoteOff noff = (NoteOff) event;
-                    int note = noff.getNoteValue();
-                    int channel = noff.getChannel();
-                    long absoluteMs = MidiUtil.ticksToMs(event.getTick(), mMPQN, mPPQ);
-                    int key = note + (channel << 8);
+        // 如果你后面要用 Metronome，这里状态是对的
+        mMetronome = new MetronomeTick(new TimeSignature(), mPPQ);
 
+        // 4. 顺序扫描事件
+        for (MidiEvent event : allEvents) {
+
+            long eventTick = event.getTick();
+            long deltaTick = eventTick - lastTick;
+
+            if (deltaTick > 0) {
+                // 使用“当前 Tempo”推进时间
+                currentMs += MidiUtil.ticksToMs(deltaTick, currentMPQN, mPPQ);
+                lastTick = eventTick;
+            }
+
+            // ---- Tempo 变化 ----
+            if (event instanceof Tempo) {
+                currentMPQN = ((Tempo) event).getMpqn();
+                continue;
+            }
+
+            // ---- 拍号变化（这里不直接影响时间，但影响节拍）----
+            if (event instanceof TimeSignature) {
+                mMetronome.setTimeSignature((TimeSignature) event);
+                continue;
+            }
+
+            // ---- NoteOn ----
+            if (event instanceof NoteOn) {
+                NoteOn no = (NoteOn) event;
+                int channel = no.getChannel();
+                if (channel == 0x09) continue; // 排除打击乐
+
+                int note = no.getNoteValue();
+                int velocity = no.getVelocity();
+                int key = note + (channel << 8);
+
+                if (velocity == 0) {
+                    // NoteOn velocity=0 -> NoteOff
                     NoteEvent ne = activeNotes.remove(key);
                     if (ne != null) {
-                        ne.durationMs = absoluteMs - ne.startTimeMs;
+                        ne.durationMs = currentMs - ne.startTimeMs;
                         noteEvents.add(ne);
                     }
+                } else {
+                    NoteEvent ne = new NoteEvent();
+                    ne.midiNote = note;
+                    ne.startTimeMs = currentMs;
+                    ne.velocity = velocity / 127f;
+                    activeNotes.put(key, ne);
+                }
+                continue;
+            }
+
+            // ---- NoteOff ----
+            if (event instanceof NoteOff) {
+                NoteOff off = (NoteOff) event;
+                int key = off.getNoteValue() + (off.getChannel() << 8);
+
+                NoteEvent ne = activeNotes.remove(key);
+                if (ne != null) {
+                    ne.durationMs = currentMs - ne.startTimeMs;
+                    noteEvents.add(ne);
                 }
             }
         }
 
-        // 处理剩余没有 NoteOff 的音符，默认持续 200ms
+        // 5. 清理没有 NoteOff 的音符（兜底）
         for (NoteEvent ne : activeNotes.values()) {
             ne.durationMs = 200;
             noteEvents.add(ne);
         }
 
-        // 按开始时间排序
+        // 6. 按开始时间排序（安全起见）
         noteEvents.sort((a, b) -> Long.compare(a.startTimeMs, b.startTimeMs));
 
         return noteEvents;
     }
+
 
     public HashMap<Long, ArrayList<Integer>> getTickNoteMap() {
 

@@ -27,6 +27,8 @@ public class PianoRollView extends View {
     private final List<FallingNote> activeNotes = new ArrayList<>();
     private final List<NoteEvent> noteEvents = new ArrayList<>();
 
+    private final PianoKey[] keyByMidi = new PianoKey[128];
+
     private final KeyboardRenderer keyboardRenderer;
     private final FallingNoteRenderer fallingRenderer;
 
@@ -42,8 +44,9 @@ public class PianoRollView extends View {
     private long attackTimeMs = 20; // 琴键按下渐入时间
     private long releaseTimeMs = 60; // 琴键松开渐出时间
     private int initialCenterMidi = 60;
-    private boolean noteOnOnlyMode = true; // true: noteOn 自动触发 release
-
+    // 单位：半音，可正可负
+    private int transposeSemitone = 0;
+    private boolean needRebuildKeyState = false;
     // 时间轴标尺：每 1px 对应多少毫秒（系统级参数）
     private float msPerPx = 20.0f; // 例如 1px = 20ms
 
@@ -75,6 +78,8 @@ public class PianoRollView extends View {
             key.midiNote = i;
             key.isBlack = isBlackKey(i);
             keys.add(key);
+
+            keyByMidi[i] = key; // ⭐关键
         }
 
         keyboardRenderer = new KeyboardRenderer();
@@ -159,7 +164,7 @@ public class PianoRollView extends View {
 
         drawGrid(canvas, waterfallHeight);
         fallingRenderer.draw(canvas, activeNotes, keys,
-                waterfallHeight, msPerPx, whiteKeyWidth, blackKeyWidth, fallingNoteColor);
+                waterfallHeight, msPerPx, whiteKeyWidth, blackKeyWidth, fallingNoteColor, transposeSemitone, keyByMidi);
 
 
         // 绘制当前时刻线
@@ -242,7 +247,6 @@ public class PianoRollView extends View {
         activeNotes.clear();
         for (NoteEvent ev : noteEvents) {
             ev.added = false;
-            ev.triggered = false;
         }
 
         // 重置琴键状态
@@ -310,7 +314,6 @@ public class PianoRollView extends View {
         activeNotes.clear();
         for (NoteEvent ev : noteEvents) {
             ev.added = false;
-            ev.triggered = false;
         }
 
         // 重置琴键状态
@@ -364,7 +367,6 @@ public class PianoRollView extends View {
             copy.durationMs = ev.durationMs;
             copy.velocity = ev.velocity;
             copy.added = false;
-            copy.triggered = false;
             noteEvents.add(copy);
         }
 
@@ -399,6 +401,14 @@ public class PianoRollView extends View {
         externalTimeMs = 0;
         lastUpdateTimeMs = 0;
         invalidate();
+    }
+
+    public void setTransposeSemitone(int semitone) {
+        if (transposeSemitone != semitone) {
+            transposeSemitone = semitone;
+            needRebuildKeyState = true;
+            invalidate();
+        }
     }
 
     /**
@@ -456,13 +466,6 @@ public class PianoRollView extends View {
     public void setAttackRelease(long attack, long release) {
         this.attackTimeMs = attack;
         this.releaseTimeMs = release;
-    }
-
-    /**
-     * 设置 noteOnOnly 模式
-     */
-    public void setNoteOnOnlyMode(boolean mode) {
-        this.noteOnOnlyMode = mode;
     }
 
     // ------------------- 颜色配置 getter/setter -------------------
@@ -579,6 +582,38 @@ public class PianoRollView extends View {
         long advanceTimeMs =
                 (long) (currentTimeLineRatio * waterfallHeight * msPerPx);
 
+
+        if (needRebuildKeyState) {
+            long now = currentTimeMs;
+
+            // 1. 清空所有键（明确为 inactive）
+            for (PianoKey key : keys) {
+                key.velocity = 0;
+                key.lastPressedTime = -1;
+                key.lastReleasedTime = now;
+            }
+
+            // 2. 重新激活当前正在 hold 的 note
+            for (FallingNote fn : activeNotes) {
+                long on = fn.startTimeMs;
+                long off = fn.startTimeMs + fn.durationMs;
+
+                if (on <= now && now < off) {
+                    int displayNote = fn.midiNote + transposeSemitone;
+                    if (displayNote >= 0 && displayNote <= 127) {
+                        PianoKey key = keyByMidi[displayNote];
+                        if (key != null) {
+                            key.velocity = fn.velocity;
+                            key.lastPressedTime = now;   // 视觉 note-on
+                            key.lastReleasedTime = 0;
+                        }
+                    }
+                }
+            }
+
+            needRebuildKeyState = false;
+        }
+
         for (NoteEvent ev : noteEvents) {
             // 音符需要提前 advanceTimeMs 就开始显示
             if (!ev.added && ev.startTimeMs <= currentTimeMs + advanceTimeMs) {
@@ -591,27 +626,12 @@ public class PianoRollView extends View {
                 ev.added = true;
                 // 注意：这里不触发琴键高亮，高亮应该在音符到达时刻线时触发
             }
-
-            // 检查是否有音符到达时刻线（触发琴键高亮）
-            if (ev.added && !ev.triggered && currentTimeMs >= ev.startTimeMs) {
-                ev.triggered = true;
-                // 高亮键：触发 noteOn
-                for (PianoKey key : keys) {
-                    if (key.midiNote == ev.midiNote) {
-                        key.velocity = ev.velocity;
-                        key.lastPressedTime = ev.startTimeMs;
-                        // noteOnOnly 模式下自动设置 release 时间
-                        if (noteOnOnlyMode) {
-                            key.lastReleasedTime = ev.startTimeMs + releaseTimeMs;
-                        }
-                    }
-                }
-            }
         }
 
         Iterator<FallingNote> it = activeNotes.iterator();
         while (it.hasNext()) {
             FallingNote fn = it.next();
+
 
             long dt = currentTimeMs - fn.startTimeMs;
 
@@ -622,7 +642,38 @@ public class PianoRollView extends View {
 
 // 时间向前 → y 变大 → 往下落
             fn.y = currentLineY + dt / msPerPx;
+// === 琴键高亮：时间区间驱动（唯一正确方式）===
+            long noteOn = fn.startTimeMs;
+            long noteOff = fn.startTimeMs + fn.durationMs;
+            int displayNote = fn.midiNote + transposeSemitone;
 
+            if (currentTimeMs >= noteOn && currentTimeMs < noteOff) {
+                if (displayNote >= 0 && displayNote <= 127) {
+                    PianoKey key = keyByMidi[displayNote];
+                    if (key != null) {
+                        key.velocity = fn.velocity;
+
+                        // attack：第一次进入区间
+                        if (key.lastPressedTime < noteOn) {
+                            key.lastPressedTime = noteOn;
+                        }
+
+                        // 保证还没 release
+                        key.lastReleasedTime = 0;
+                    }
+                }
+            } else if (currentTimeMs >= noteOff) {
+                // === note-off ===
+                if (displayNote >= 0 && displayNote <= 127) {
+                    PianoKey key = keyByMidi[displayNote];
+                    if (key != null) {
+                        // 只在第一次越过 noteOff 时触发 release
+                        if (key.lastReleasedTime < noteOff) {
+                            key.lastReleasedTime = noteOff;
+                        }
+                    }
+                }
+            }
 // 整个音符已经完全掉出屏幕底部
             if (fn.y - fn.durationMs / msPerPx > waterfallHeight) {
                 it.remove();
@@ -686,7 +737,6 @@ public class PianoRollView extends View {
         public long durationMs;     // 音符持续时间
         public float velocity;
         public boolean added = false;      // 是否已添加到显示列表
-        public boolean triggered = false;  // 是否已触发琴键高亮
     }
 }
 
@@ -846,6 +896,7 @@ class KeyboardRenderer {
      * 计算键的当前透明度（attack/release 动画）
      */
     private float computeAlpha(PianoRollView.PianoKey key, long now, long attackTimeMs, long releaseTimeMs) {
+        if (key.lastPressedTime < 0) return 0f; //防止某些状态乱亮
         if (key.lastPressedTime > key.lastReleasedTime) {
             // attack 阶段
             float t = now - key.lastPressedTime;
@@ -872,9 +923,14 @@ class KeyboardRenderer {
 class FallingNoteRenderer {
 
     private final Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private final Paint strokePaint = new Paint(Paint.ANTI_ALIAS_FLAG); // 👈 新增
 
     public FallingNoteRenderer() {
         paint.setStyle(Paint.Style.FILL);
+
+        strokePaint.setStyle(Paint.Style.STROKE);
+        strokePaint.setStrokeWidth(2f); // 1–2px 都行
+        strokePaint.setColor(Color.DKGRAY);
     }
 
     public void draw(Canvas canvas, List<PianoRollView.FallingNote> notes,
@@ -883,16 +939,19 @@ class FallingNoteRenderer {
                      float msPerPx,                 // ✅ 新增
                      float whiteKeyWidth,
                      float blackKeyWidth,
-                     int noteColor) {
+                     int noteColor,
+                     int transposeSemitone, PianoRollView.PianoKey[] keyByMidi) {
 
         for (PianoRollView.FallingNote fn : notes) {
             float x = 0;
             boolean isBlack = false;
-            for (PianoRollView.PianoKey key : keys) {
-                if (key.midiNote == fn.midiNote) {
+            int displayNote = fn.midiNote + transposeSemitone;
+
+            if (displayNote >= 0 && displayNote <= 127) {
+                PianoRollView.PianoKey key = keyByMidi[displayNote];
+                if (key != null) {
                     x = key.drawX;
                     isBlack = key.isBlack;
-                    break;
                 }
             }
 
@@ -905,7 +964,22 @@ class FallingNoteRenderer {
 
             paint.setColor(noteColor);
             paint.setAlpha((int) (255 * fn.velocity));
+
+            // ① 填充
             canvas.drawRect(x, top, x + width, fn.y, paint);
+
+// ② 描边（同 velocity，稍微弱一点也可以）
+            strokePaint.setAlpha((int) (180 * fn.velocity));
+
+// 为了避免描边被裁掉，向内收半个 stroke
+            float half = strokePaint.getStrokeWidth() * 0.5f;
+            canvas.drawRect(
+                    x + half,
+                    top + half,
+                    x + width - half,
+                    fn.y - half,
+                    strokePaint
+            );
         }
     }
 }

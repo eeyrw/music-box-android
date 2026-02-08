@@ -50,8 +50,6 @@ public class MainActivity extends AppCompatActivity {
         meterView = findViewById(R.id.audio_meter);
 
         pianoRollView = findViewById(R.id.pianoRollView);
-        // 设置 noteOn only 模式
-        //pianoView.setNoteOnOnlyMode(true);
 
         // 设置 attack/release 时间
         pianoRollView.setAttackRelease(100, 300);
@@ -131,6 +129,7 @@ public class MainActivity extends AppCompatActivity {
             tvTransposeValue.setText(String.format("Transpose: %d half-tone", semitone));
 
             midiPlayer.setTranspose(semitone);
+            pianoRollView.setTransposeSemitone(semitone);
         });
 
 
@@ -171,6 +170,7 @@ public class MainActivity extends AppCompatActivity {
                     @Override
                     public void run() {
                         transposeSlider.setSemitone(transpose);
+                        pianoRollView.setTransposeSemitone(transpose);
                         TextView tvTransposeValue = findViewById(R.id.tvTransposeValue);
                         tvTransposeValue.setText(String.format("Transpose: %d half-tone", transpose));
                     }

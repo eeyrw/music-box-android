@@ -53,12 +53,12 @@
         <com.customview.graph.AudioMeterView
             android:id="@+id/audio_meter"
             android:layout_width="match_parent"
-            android:layout_height="100dp" />
+            android:layout_height="120dp" />
 
         <com.customview.graph.PianoRollView
             android:id="@+id/pianoRollView"
             android:layout_width="match_parent"
-            android:layout_height="240dp" />
+            android:layout_height="200dp" />
 
         <!-- ================= Transport ================= -->
         <LinearLayout
