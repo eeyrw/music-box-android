@@ -52,13 +52,15 @@ public class MainActivity extends AppCompatActivity {
         pianoRollView = findViewById(R.id.pianoRollView);
 
         // 设置 attack/release 时间
-        pianoRollView.setAttackRelease(100, 300);
+        pianoRollView.setAttackRelease(20, 150);
 
         pianoRollView.setHighlightColor(getResources().getColor(R.color.colorPrimary));
 
         pianoRollView.setFallingNoteColor(getResources().getColor(R.color.colorPrimary));
 
         transposeSlider = findViewById(R.id.transposeSlider);
+
+        transposeSlider.setMainColor(getResources().getColor(R.color.colorPrimary));
 
         final TextView tvPlayStatus = findViewById(R.id.tvPlayStatus);
 
@@ -126,7 +128,7 @@ public class MainActivity extends AppCompatActivity {
         transposeSlider.setOnSemitoneChangeListener(semitone -> {
 
             TextView tvTransposeValue = findViewById(R.id.tvTransposeValue);
-            tvTransposeValue.setText(String.format("Transpose: %d half-tone", semitone));
+            tvTransposeValue.setText(String.format("Transpose: %d semitone", semitone));
 
             midiPlayer.setTranspose(semitone);
             pianoRollView.setTransposeSemitone(semitone);
@@ -148,7 +150,9 @@ public class MainActivity extends AppCompatActivity {
 
                         switch (state) {
                             case PLAYING:
-                                // 开始播放
+                                pianoRollView.setPlaybackTime(0);  // 从头开始
+                                pianoRollView.startPlayback();
+                            case RESUME:
                                 pianoRollView.resumePlayback();
                                 break;
                             case PAUSE:
@@ -172,7 +176,7 @@ public class MainActivity extends AppCompatActivity {
                         transposeSlider.setSemitone(transpose);
                         pianoRollView.setTransposeSemitone(transpose);
                         TextView tvTransposeValue = findViewById(R.id.tvTransposeValue);
-                        tvTransposeValue.setText(String.format("Transpose: %d half-tone", transpose));
+                        tvTransposeValue.setText(String.format("Transpose: %d semitone", transpose));
                     }
                 });
             }
@@ -183,7 +187,7 @@ public class MainActivity extends AppCompatActivity {
                     @Override
                     public void run() {
 
-                        meterView.pushAudioFrame(waveform, spectrum, vuLevel);
+                        meterView.setAudioVisualData(waveform, spectrum, vuLevel);
                     }
                 });
             }
@@ -193,8 +197,6 @@ public class MainActivity extends AppCompatActivity {
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-
-                        //pianoView.noteOn(note, 1.0f);
                         pianoRollView.setPlaybackTime(ms);
                     }
                 });
@@ -205,11 +207,7 @@ public class MainActivity extends AppCompatActivity {
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-
-                        //pianoView.noteOn(note, 1.0f);
                         pianoRollView.loadNoteEvents(noteList);
-                        pianoRollView.setPlaybackTime(0);  // 从头开始
-                        pianoRollView.startPlayback();      // 启动内部刷新
                     }
                 });
             }

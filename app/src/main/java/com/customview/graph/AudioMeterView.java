@@ -31,7 +31,7 @@ public class AudioMeterView extends ViewGroup {
     /**
      * 推送音频帧数据
      */
-    public void pushAudioFrame(float[] pcm, float[] spectrumDb, VuLevel vuLevel) {
+    public void setAudioVisualData(float[] pcm, float[] spectrumDb, VuLevel vuLevel) {
         waveformView.setValueArray(pcm);
         spectrumView.setSpectrum(spectrumDb);
         vuMeterView.setVuLevel(vuLevel);

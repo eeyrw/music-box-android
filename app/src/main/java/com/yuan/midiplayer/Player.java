@@ -7,8 +7,48 @@ import java.util.concurrent.LinkedBlockingQueue;
 
 public class Player {
 
-    public enum PlayerState {
-        STOP, PLAYING, PAUSE, PAUSE_BY_OS,
+    private void processState() throws InterruptedException {
+        UIMessage currentMessage = mUIMessageQueue.take();
+        Log.d(TAG, "processState: New Messege " + currentMessage.toString());
+        switch (mState) {
+            case STOP:
+                if (currentMessage == UIMessage.PLAY_KEY) {
+                    internalPlay();
+                    updateState(PlayerState.PLAYING);
+                }
+                break;
+            case PLAYING:
+            case RESUME:
+                if (currentMessage == UIMessage.PAUSE_KEY) {
+                    internalPause();
+                    updateState(PlayerState.PAUSE);
+                } else if (currentMessage == UIMessage.STOP_KEY) {
+                    internalStop();
+                    updateState(PlayerState.STOP);
+                } else if (currentMessage == UIMessage.GO_TO_BACK) {
+                    internalPause();
+                    updateState(PlayerState.PAUSE_BY_OS);
+                }
+                break;
+            case PAUSE:
+                if (currentMessage == UIMessage.PLAY_KEY) {
+                    internalResume();
+                    updateState(PlayerState.RESUME);
+                } else if (currentMessage == UIMessage.STOP_KEY) {
+                    internalStop();
+                    updateState(PlayerState.STOP);
+                }
+                break;
+            case PAUSE_BY_OS:
+                if (currentMessage == UIMessage.PLAY_KEY || currentMessage == UIMessage.RETURN_FROM_BACK) {
+                    internalResume();
+                    updateState(PlayerState.RESUME);
+                } else if (currentMessage == UIMessage.STOP_KEY) {
+                    internalStop();
+                    updateState(PlayerState.STOP);
+                }
+                break;
+        }
     }
 
     public enum UIMessage {PLAY_KEY, STOP_KEY, PAUSE_KEY, GO_TO_BACK, RETURN_FROM_BACK}
@@ -59,47 +99,8 @@ public class Player {
 
     }
 
-    private void processState() throws InterruptedException {
-        UIMessage currentMessage = mUIMessageQueue.take();
-        Log.d(TAG, "processState: New Messege " + currentMessage.toString());
-        switch (mState) {
-            case STOP:
-                if (currentMessage == UIMessage.PLAY_KEY) {
-                    internalPlay();
-                    updateState(PlayerState.PLAYING);
-                }
-                break;
-            case PLAYING:
-                if (currentMessage == UIMessage.PAUSE_KEY) {
-                    internalPause();
-                    updateState(PlayerState.PAUSE);
-                } else if (currentMessage == UIMessage.STOP_KEY) {
-                    internalStop();
-                    updateState(PlayerState.STOP);
-                } else if (currentMessage == UIMessage.GO_TO_BACK) {
-                    internalPause();
-                    updateState(PlayerState.PAUSE_BY_OS);
-                }
-                break;
-            case PAUSE:
-                if (currentMessage == UIMessage.PLAY_KEY) {
-                    internalResume();
-                    updateState(PlayerState.PLAYING);
-                } else if (currentMessage == UIMessage.STOP_KEY) {
-                    internalStop();
-                    updateState(PlayerState.STOP);
-                }
-                break;
-            case PAUSE_BY_OS:
-                if (currentMessage == UIMessage.PLAY_KEY || currentMessage == UIMessage.RETURN_FROM_BACK) {
-                    internalResume();
-                    updateState(PlayerState.PLAYING);
-                } else if (currentMessage == UIMessage.STOP_KEY) {
-                    internalStop();
-                    updateState(PlayerState.STOP);
-                }
-                break;
-        }
+    public enum PlayerState {
+        STOP, PLAYING, PAUSE, RESUME, PAUSE_BY_OS,
     }
 
 

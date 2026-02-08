@@ -148,9 +148,7 @@ public class MidiPlayer extends Player {
         @Override
         public void onStart(boolean fromBeginning) {
             if (fromBeginning) {
-                // System.out.println(mLabel + " Started!");
             } else {
-                // System.out.println(mLabel + " resumed");
             }
         }
 

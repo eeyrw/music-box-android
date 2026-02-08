@@ -42,8 +42,18 @@ public class TransposeSliderView extends View {
     private Paint trackPaint;
     private Paint tickPaint;
     private Paint textPaint;
-    private Paint thumbPaint;
-    private Paint shadowPaint;
+    private Paint thumbBodyPaint;
+    private Paint thumbLinePaint;
+
+    /* =======================
+     * 颜色
+     * ======================= */
+    private int mainColor = Color.BLUE; // 默认主色
+
+    public void setMainColor(int color) {
+        mainColor = color;
+        invalidate(); // 改颜色后刷新
+    }
 
     /* =======================
      * 回调
@@ -74,7 +84,6 @@ public class TransposeSliderView extends View {
     }
 
     private void init() {
-        setLayerType(LAYER_TYPE_SOFTWARE, null);
 
         trackPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         trackPaint.setColor(Color.DKGRAY);
@@ -87,10 +96,9 @@ public class TransposeSliderView extends View {
         textPaint.setTextSize(dp(10));
         textPaint.setTextAlign(Paint.Align.CENTER);
 
-        thumbPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        thumbBodyPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        thumbLinePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
 
-        shadowPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-        shadowPaint.setColor(Color.GRAY);
     }
 
     @Override
@@ -166,35 +174,56 @@ public class TransposeSliderView extends View {
 
         float radius = dp(4);
 
-        // 阴影
-        shadowPaint.setShadowLayer(dp(6), 0, dp(3), Color.BLACK);
-        c.drawRoundRect(r, radius, radius, shadowPaint);
-        shadowPaint.clearShadowLayer();
 
-        // 主体
+        // 主体拟物渐变：顶端亮，中间主色，底部稍暗
+        int topColor = lightenColor(mainColor, 0.4f);  // 顶端更亮
+        int middleColor = mainColor;                   // 中间主色
+        int bottomColor = darkenColor(mainColor, 0.15f); // 底部略暗
+
         LinearGradient grad = new LinearGradient(
                 r.left, r.top, r.left, r.bottom,
-                new int[]{
-                        Color.LTGRAY,
-                        Color.GRAY,
-                        Color.DKGRAY
-                },
+                new int[]{topColor, middleColor, bottomColor},
                 new float[]{0f, 0.5f, 1f},
                 Shader.TileMode.CLAMP
         );
-        thumbPaint.setShader(grad);
-        c.drawRoundRect(r, radius, radius, thumbPaint);
-        thumbPaint.setShader(null);
+        thumbBodyPaint.setShader(grad);
+        c.drawRoundRect(r, radius, radius, thumbBodyPaint);
+        thumbBodyPaint.setShader(null);
 
         // 中央刻线
-        thumbPaint.setColor(Color.argb(140, 0, 0, 0));
+        thumbLinePaint.setColor(Color.argb(140, 0, 0, 0));
         c.drawLine(
                 thumbX,
                 r.top + dp(3),
                 thumbX,
                 r.bottom - dp(3),
-                thumbPaint
+                thumbLinePaint
         );
+    }
+
+
+    private int lightenColor(int color, float fraction) {
+        int r = Color.red(color);
+        int g = Color.green(color);
+        int b = Color.blue(color);
+
+        r += (int) ((255 - r) * fraction);
+        g += (int) ((255 - g) * fraction);
+        b += (int) ((255 - b) * fraction);
+
+        return Color.argb(Color.alpha(color), r, g, b);
+    }
+
+    private int darkenColor(int color, float fraction) {
+        int r = Color.red(color);
+        int g = Color.green(color);
+        int b = Color.blue(color);
+
+        r -= (int) (r * fraction);
+        g -= (int) (g * fraction);
+        b -= (int) (b * fraction);
+
+        return Color.argb(Color.alpha(color), r, g, b);
     }
 
     @Override
