@@ -50,7 +50,7 @@ public class MidiHelper {
         // 3. 时间推进状态
         int currentMPQN = Tempo.DEFAULT_MPQN;
         long lastTick = 0;
-        long currentMs = 0;
+        double currentMs = 0;
 
         // 如果你后面要用 Metronome，这里状态是对的
         mMetronome = new MetronomeTick(new TimeSignature(), mPPQ);
@@ -63,7 +63,7 @@ public class MidiHelper {
 
             if (deltaTick > 0) {
                 // 使用“当前 Tempo”推进时间
-                currentMs += MidiUtil.ticksToMs(deltaTick, currentMPQN, mPPQ);
+                currentMs += ((double) (deltaTick * currentMPQN) / mPPQ) / 1000;
                 lastTick = eventTick;
             }
 
@@ -93,13 +93,13 @@ public class MidiHelper {
                     // NoteOn velocity=0 -> NoteOff
                     NoteEvent ne = activeNotes.remove(key);
                     if (ne != null) {
-                        ne.durationMs = currentMs - ne.startTimeMs;
+                        ne.durationMs = (long) currentMs - ne.startTimeMs;
                         noteEvents.add(ne);
                     }
                 } else {
                     NoteEvent ne = new NoteEvent();
                     ne.midiNote = note;
-                    ne.startTimeMs = currentMs;
+                    ne.startTimeMs = (long) currentMs;
                     ne.velocity = velocity / 127f;
                     activeNotes.put(key, ne);
                 }
@@ -113,7 +113,7 @@ public class MidiHelper {
 
                 NoteEvent ne = activeNotes.remove(key);
                 if (ne != null) {
-                    ne.durationMs = currentMs - ne.startTimeMs;
+                    ne.durationMs = (long) currentMs - ne.startTimeMs;
                     noteEvents.add(ne);
                 }
             }
