@@ -49,8 +49,10 @@ public class MidiHelper {
 
         // 3. 时间推进状态
         int currentMPQN = Tempo.DEFAULT_MPQN;
-        long lastTick = 0;
-        double currentMs = 0;
+        long currentMs = 0;
+
+        long lastTempoChangeMs = 0;
+        long lastTempoChangeTick = 0;
 
         // 如果你后面要用 Metronome，这里状态是对的
         mMetronome = new MetronomeTick(new TimeSignature(), mPPQ);
@@ -59,16 +61,14 @@ public class MidiHelper {
         for (MidiEvent event : allEvents) {
 
             long eventTick = event.getTick();
-            long deltaTick = eventTick - lastTick;
-
-            if (deltaTick > 0) {
-                // 使用“当前 Tempo”推进时间
-                currentMs += ((double) (deltaTick * currentMPQN) / mPPQ) / 1000;
-                lastTick = eventTick;
-            }
+            long currentTempoPeriodTick = eventTick - lastTempoChangeTick;
+            long currentTempoPeriodMs = MidiUtil.ticksToMs(currentTempoPeriodTick, currentMPQN, mPPQ);
+            currentMs = lastTempoChangeMs + currentTempoPeriodMs;
 
             // ---- Tempo 变化 ----
             if (event instanceof Tempo) {
+                lastTempoChangeMs = currentMs;
+                lastTempoChangeTick = eventTick;
                 currentMPQN = ((Tempo) event).getMpqn();
                 continue;
             }
