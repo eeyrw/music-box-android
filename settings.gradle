@@ -1,2 +1,4 @@
 include ':app'
 rootProject.name = "music-box"
+include ':app', ':MidiDroid'
+project(':MidiDroid').projectDir = file('MidiDroid')

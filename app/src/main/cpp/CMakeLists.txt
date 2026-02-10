@@ -4,14 +4,17 @@
 # Sets the minimum version of CMake required to build the native library.
 
 cmake_minimum_required(VERSION 3.4.1)
+SET(CMAKE_CXX_FLAGS_RELEASE "$ENV{CXXFLAGS}  -O1 -Wall -fno-strict-aliasing")
+# SET(CMAKE_C_FLAGS_RELEASE "$ENV{CFLAGS}  -O0 -Wall")
+# SET(CMAKE_CXX_FLAGS_RELEASE "$ENV{CXXFLAGS}  -save-temps")
+# SET(CMAKE_C_FLAGS_RELEASE "$ENV{CFLAGS}  -save-temps")
 
-SET(CMAKE_CXX_FLAGS_RELEASE "$ENV{CXXFLAGS}  -O0 -Wall")
 
-if(${ANDROID_ABI} STREQUAL "x86_64")
+if (${ANDROID_ABI} STREQUAL "x86_64")
     enable_language(ASM_NASM)
 
     #set(asm_SRCS src/main/cpp/test.asm)
-elseif(${ANDROID_ABI} STREQUAL "arm64-v8a")
+elseif (${ANDROID_ABI} STREQUAL "arm64-v8a")
     enable_language(ASM)
 
     #set(asm_SRCS src/main/cpp/arm_test.s)
@@ -36,8 +39,7 @@ add_library( # Sets the name of the library.
         ./WaveTableSynthesizer/Player.c
         ./WaveTableSynthesizer/score.c
         ./WaveTableSynthesizer/SynthCore.c
-        ./WaveTableSynthesizer/WaveTable_Celesta_C5.c
-        ./WaveTableSynthesizer/WaveTable_Celesta_C6.c     
+        ./WaveTableSynthesizer/WaveTable.c
         )
 
 # Searches for a specified prebuilt library and stores the path as a

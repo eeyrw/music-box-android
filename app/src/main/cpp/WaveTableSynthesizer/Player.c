@@ -7,27 +7,23 @@
 
 extern unsigned char Score[];
 
-void Player32kProc(Player *player)
-{
+void Player32kProc(Player *player) {
     Synth(&(player->mainSynthesizer));
     player->currentTick++;
-    if(player->decayGenTick<200)
-         player->decayGenTick+=1;
+    if (player->decayGenTick < 200)
+        player->decayGenTick += 1;
 }
 
-void PlayerProcess(Player *player)
-{
+void PlayerProcess(Player *player) {
 
     uint8_t temp;
     //LOGD("PlayerProcess\n");
-    if (player->decayGenTick >= 150)
-    {
+    if (player->decayGenTick >= 150) {
         //LOGD("GenDecayEnvlope\n");
         GenDecayEnvlope(&(player->mainSynthesizer));
         player->decayGenTick = 0;
     }
-    if (player->status == STATUS_PLAYING)
-    {
+    if (player->status == STATUS_PLAYING) {
         if ((player->currentTick >> 8) >= player->lastScoreTick)
         {
             do
@@ -44,20 +40,18 @@ void PlayerProcess(Player *player)
                     NoteOn(&(player->mainSynthesizer), temp);
                 }
             } while ((temp & 0x80) == 0);
-            
+
             PlayUpdateNextScoreTick(player);
         }
     }
     //LOGD("PlayerProcessWEnd\n");
 }
 
-void PlayUpdateNextScoreTick(Player *player)
-{
+void PlayUpdateNextScoreTick(Player *player) {
     uint32_t tempU32;
     uint8_t temp;
     tempU32 = player->lastScoreTick;
-    do
-    {
+    do {
         temp = *(player->scorePointer);
         player->scorePointer++;
         tempU32 += temp;
@@ -65,8 +59,7 @@ void PlayUpdateNextScoreTick(Player *player)
     player->lastScoreTick = tempU32;
 }
 
-void PlayerPlay(Player *player)
-{
+void PlayerPlay(Player *player) {
     player->currentTick = 0;
     player->lastScoreTick = 0;
     player->decayGenTick = 0;

@@ -1,15 +1,12 @@
 package com.yuan.midiplayer;
 
 import android.util.Log;
-import android.widget.TextView;
 
-import com.customview.graph.LineGraphView;
-import com.yuan.music_box.R;
-import com.pdrogfer.mididroid.MidiFile;
-import com.pdrogfer.mididroid.event.MidiEvent;
-import com.pdrogfer.mididroid.event.NoteOn;
-import com.pdrogfer.mididroid.util.MidiEventListener;
-import com.pdrogfer.mididroid.util.MidiProcessor;
+import com.pgf.mididroid.MidiFile;
+import com.pgf.mididroid.event.MidiEvent;
+import com.pgf.mididroid.event.NoteOn;
+import com.pgf.mididroid.util.MidiEventListener;
+import com.pgf.mididroid.util.MidiProcessor;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -24,8 +21,8 @@ public class MidiPlayer extends Player {
     private String midiFilePath;
     private int mTransposeValue = 0;
     private MidiPlayerEventListener mListener;
-    private Timer waveformPollTimer = new Timer();
-    private TimerTask waveformPollTask;
+    private Timer visualizeTaskTimer = new Timer();
+    private TimerTask visualizeTask;
 
 
     public MidiPlayer(MidiPlayerEventListener listener) {
@@ -77,32 +74,34 @@ public class MidiPlayer extends Player {
     }
 
     void stopInternalTimer() {
-        if (waveformPollTimer != null) {
-            waveformPollTimer.cancel();
-            waveformPollTimer = null;
+        if (visualizeTaskTimer != null) {
+            visualizeTaskTimer.cancel();
+            visualizeTaskTimer = null;
         }
-        if (waveformPollTask != null) {
-            waveformPollTask.cancel();
-            waveformPollTask = null;
+        if (visualizeTask != null) {
+            visualizeTask.cancel();
+            visualizeTask = null;
         }
     }
 
     void startInternalTimer() {
-        if (waveformPollTimer == null) {
-            waveformPollTimer = new Timer();
+        if (visualizeTaskTimer == null) {
+            visualizeTaskTimer = new Timer();
         }
 
-        if (waveformPollTask == null) {
-            waveformPollTask = new TimerTask() {
+        if (visualizeTask == null) {
+            visualizeTask = new TimerTask() {
                 @Override
                 public void run() {
-                    mListener.onWaveformChange(mEngine.getWaveformData());
+                    mListener.onVisualChangeChange(mEngine.getWaveformData(),
+                            mEngine.getSpectrumData(),
+                            mEngine.getVuLevelData());
                 }
             };
         }
 
-        if (waveformPollTimer != null && waveformPollTask != null)
-            waveformPollTimer.schedule(waveformPollTask, 0, 50);
+        if (visualizeTaskTimer != null && visualizeTask != null)
+            visualizeTaskTimer.schedule(visualizeTask, 0, 30);
     }
 
     public void playMidiFile(InputStream input) {
@@ -110,8 +109,8 @@ public class MidiPlayer extends Player {
             // File input = new File(midiFilePath);
             MidiFile midi = new MidiFile(input);
             NoteListProcessor np = new NoteListProcessor(midi);
-            np.recommHighestPitch = 72; //C5 in midi number
-            np.recommLowestPitch = 72; //C5 in midi number
+            np.recommHighestPitch = 60; //C4 in midi number
+            np.recommLowestPitch = 60; //C4 in midi number
             np.analyzeNoteMapByCentroid();
             mListener.onSuggestTransposeChange(np.suggestTranpose);
             mTransposeValue = np.suggestTranpose;
@@ -119,6 +118,10 @@ public class MidiPlayer extends Player {
             MidiEventPlayer ep = new MidiEventPlayer("sd");
             mProcessor = new MidiProcessor(midi);
             mProcessor.registerEventListener(ep, NoteOn.class);
+
+            MidiHelper helper = new MidiHelper(midi);
+            mListener.onGetNoteList(helper.generateNoteEvents());
+
             play();
             // Start the processor:
         } catch (IOException e) {
@@ -145,9 +148,7 @@ public class MidiPlayer extends Player {
         @Override
         public void onStart(boolean fromBeginning) {
             if (fromBeginning) {
-                // System.out.println(mLabel + " Started!");
             } else {
-                // System.out.println(mLabel + " resumed");
             }
         }
 
@@ -161,6 +162,8 @@ public class MidiPlayer extends Player {
                 final int noteTranspose = note + mTransposeValue;
                 if (noteTranspose >= 0 && noteTranspose <= 127) {
                     mEngine.noteOn(noteTranspose);
+                    mListener.onNoteOn(noteTranspose, ms);
+
                     //Log.d(TAG, String.format("onMidiEvent: %d", noteTranspose));
                 }
             }

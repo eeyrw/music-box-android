@@ -1,42 +1,33 @@
 package com.yuan.music_box;
 
-import androidx.appcompat.app.AppCompatActivity;
-
-import android.annotation.SuppressLint;
-import android.content.ContentUris;
-import android.content.Intent;
-import android.database.Cursor;
-import android.net.Uri;
-import android.os.Bundle;
-import android.os.Environment;
-import android.provider.DocumentsContract;
-import android.provider.MediaStore;
-import android.view.View;
-import android.widget.Button;
-import android.widget.SeekBar;
-import android.widget.TextView;
-
 import android.content.Context;
+import android.content.Intent;
 import android.media.AudioManager;
+import android.net.Uri;
 import android.os.Build;
+import android.os.Bundle;
 import android.util.Log;
 import android.view.MotionEvent;
+import android.view.View;
+import android.widget.Button;
+import android.widget.ImageButton;
+import android.widget.TextView;
 import android.widget.Toast;
 
-import com.customview.graph.LineGraphView;
+import androidx.appcompat.app.AppCompatActivity;
+
+import com.customview.graph.AudioMeterView;
+import com.customview.graph.PianoRollView;
+import com.customview.graph.TransposeSliderView;
+import com.customview.graph.VuLevel;
 import com.yuan.midiplayer.MidiPlayer;
 import com.yuan.midiplayer.MidiPlayerEventListener;
 import com.yuan.midiplayer.Player;
 
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.Timer;
-import java.util.TimerTask;
+import java.util.List;
 
 
 public class MainActivity extends AppCompatActivity {
@@ -44,15 +35,39 @@ public class MainActivity extends AppCompatActivity {
     private MidiPlayer midiPlayer;
     private String midiFilePath;
 
+    private PianoRollView pianoRollView;
+
+    private AudioMeterView meterView;
+
+    private TransposeSliderView transposeSlider;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         Log.d(TAG, "onCreate");
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        meterView = findViewById(R.id.audio_meter);
+
+        pianoRollView = findViewById(R.id.pianoRollView);
+
+        // 设置 attack/release 时间
+        pianoRollView.setAttackRelease(20, 150);
+
+        pianoRollView.setHighlightColor(getResources().getColor(R.color.colorPrimary));
+
+        pianoRollView.setFallingNoteColor(getResources().getColor(R.color.colorPrimary));
+
+        transposeSlider = findViewById(R.id.transposeSlider);
+
+        transposeSlider.setMainColor(getResources().getColor(R.color.colorPrimary));
+
         final TextView tvPlayStatus = findViewById(R.id.tvPlayStatus);
 
-        Button btnStop = findViewById(R.id.btnStop);
+        ImageButton btnStop = findViewById(R.id.btnStop);
+
+        final TextView tvFileName = findViewById(R.id.tvFileName);
+        tvFileName.setSelected(true);
         btnStop.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -60,7 +75,7 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        Button btnPause = findViewById(R.id.btnPause);
+        ImageButton btnPause = findViewById(R.id.btnPause);
         btnPause.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -68,7 +83,7 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        Button btnPlay = findViewById(R.id.btnPlay);
+        ImageButton btnPlay = findViewById(R.id.btnPlay);
         btnPlay.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -86,41 +101,39 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        Button btnChooseMidi = findViewById(R.id.btnChooseMIdi);
+        Button btnChooseMidi = findViewById(R.id.btnChooseMidi);
         btnChooseMidi.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
+                // intent.putExtra(Intent.EXTRA_MIME_TYPES, new String[]{"audio/mid"});
                 intent.setType("*/*");//设置类型，我这里是任意类型，任意后缀的可以这样写。
                 intent.addCategory(Intent.CATEGORY_OPENABLE);
                 startActivityForResult(intent, 2);
             }
         });
 
-        SeekBar sbTranspose = findViewById(R.id.sbTranspose);
-        sbTranspose.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+        Button btnScanQRCode = findViewById(R.id.btnScanQRCode);
+        btnScanQRCode.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                int transposeValue = progress - 24;
-                midiPlayer.setTranspose(transposeValue);
-                TextView tvTransposeValue = findViewById(R.id.tvTransposeValue);
-                tvTransposeValue.setText(String.format("Transpose: %d half-tone", transposeValue));
-            }
-
-            @Override
-            public void onStartTrackingTouch(SeekBar seekBar) {
-
-            }
-
-            @Override
-            public void onStopTrackingTouch(SeekBar seekBar) {
-
+            public void onClick(View v) {
+                midiPlayer.pause();
+                Intent intent = new Intent(MainActivity.this, ContinuousCaptureActivity.class);
+                startActivityForResult(intent, 3);//此处的requestCode应与下面结果处理函中调用的requestCode一致
             }
         });
 
-        LineGraphView mLineGraphView = (LineGraphView) findViewById(R.id.lineGraphView);
-        mLineGraphView.setBackColor(getResources().getColor(R.color.colorPrimaryDark));
-        mLineGraphView.setExtraText("Time Domain");
+
+        // 监听移调变化
+        transposeSlider.setOnSemitoneChangeListener(semitone -> {
+
+            TextView tvTransposeValue = findViewById(R.id.tvTransposeValue);
+            tvTransposeValue.setText(String.format("Transpose: %d semitone", semitone));
+
+            midiPlayer.setTranspose(semitone);
+            pianoRollView.setTransposeSemitone(semitone);
+        });
+
 
         Intent intent = new Intent(MainActivity.this, FileListActivity.class);
         startActivityForResult(intent, 0);//此处的requestCode应与下面结果处理函中调用的requestCode一致
@@ -131,7 +144,25 @@ public class MainActivity extends AppCompatActivity {
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
+
+
                         tvPlayStatus.setText(state.toString());
+
+                        switch (state) {
+                            case PLAYING:
+                                pianoRollView.setPlaybackTime(0);  // 从头开始
+                                pianoRollView.startPlayback();
+                            case RESUME:
+                                pianoRollView.resumePlayback();
+                                break;
+                            case PAUSE:
+                            case PAUSE_BY_OS:
+                                pianoRollView.pausePlayback();
+                                break;
+                            case STOP:
+                                pianoRollView.stopPlayback();
+                                break;
+                        }
                     }
                 });
             }
@@ -142,25 +173,45 @@ public class MainActivity extends AppCompatActivity {
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        int progress = transpose + 24;
-                        SeekBar sbTranspose = findViewById(R.id.sbTranspose);
-                        sbTranspose.setProgress(progress);
+                        transposeSlider.setSemitone(transpose);
+                        pianoRollView.setTransposeSemitone(transpose);
                         TextView tvTransposeValue = findViewById(R.id.tvTransposeValue);
-                        tvTransposeValue.setText(String.format("Transpose suggestion: %d half-tone", transpose));
+                        tvTransposeValue.setText(String.format("Transpose: %d semitone", transpose));
                     }
                 });
             }
 
             @Override
-            public void onWaveformChange(float[] waveform) {
+            public void onVisualChangeChange(float[] waveform, float[] spectrum, VuLevel vuLevel) {
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        LineGraphView mLineGraphView = (LineGraphView) findViewById(R.id.lineGraphView);
-                        mLineGraphView.setValueArray(waveform);
+
+                        meterView.setAudioVisualData(waveform, spectrum, vuLevel);
                     }
                 });
             }
+
+            @Override
+            public void onNoteOn(int note, long ms) {
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        pianoRollView.setPlaybackTime(ms);
+                    }
+                });
+            }
+
+            @Override
+            public void onGetNoteList(List<PianoRollView.NoteEvent> noteList) {
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        pianoRollView.loadNoteEvents(noteList);
+                    }
+                });
+            }
+
         });
     }
 
@@ -197,6 +248,17 @@ public class MainActivity extends AppCompatActivity {
                 e.printStackTrace();
             }
 
+        } else if (requestCode == 3 && resultCode == RESULT_OK) {
+            Bundle bundle = data.getExtras();
+            if (bundle != null) {
+                byte[] a = bundle.getByteArray("songContent");
+                StringBuilder sb = new StringBuilder();
+                for (int j = 0; j < a.length; j++) {
+                    sb.append(String.format("%02X ", a[j] & 0xFF));
+                }
+                Log.d(TAG, sb.toString());
+                Log.d(TAG, String.format("DataLen %d", a.length));
+            }
         }
     }
 
@@ -233,7 +295,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public boolean onTouchEvent(MotionEvent event) {
         if (event.getAction() == MotionEvent.ACTION_DOWN) {
-            midiPlayer.mEngine.noteOn(45);
+            // midiPlayer.mEngine.noteOn(45);
         } else if (event.getAction() == MotionEvent.ACTION_UP) {
             // noteOn(mEngineHandle, false);
         }

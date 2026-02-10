@@ -3,6 +3,8 @@ package com.yuan.midiplayer;
 import android.os.Build;
 import android.util.Log;
 
+import com.customview.graph.VuLevel;
+
 public class MusicBoxEngine {
     private static long mEngineHandle = 0;
     private final String TAG = com.yuan.music_box.MainActivity.class.toString();
@@ -20,6 +22,11 @@ public class MusicBoxEngine {
     private static native void nativeSetDefaultStreamValues(int sampleRate, int framesPerBurst);
 
     private static native float[] nativeGetWaveformData(long engineHandle);
+
+    private static native float[] nativeGetSpectrumData(long engineHandle);
+
+    private static native VuLevel nativeGetVuLevel(long engineHandle);
+
 
     // Used to load the 'native-lib' library on application startup.
     static {
@@ -55,6 +62,20 @@ public class MusicBoxEngine {
             return nativeGetWaveformData(mEngineHandle);
         else
             return new float[256];
+    }
+
+    public float[] getSpectrumData() {
+        if (mEngineHandle != 0)
+            return nativeGetSpectrumData(mEngineHandle);
+        else
+            return new float[128];
+    }
+
+    public VuLevel getVuLevelData() {
+        if (mEngineHandle != 0)
+            return nativeGetVuLevel(mEngineHandle);
+        else
+            return null;
     }
 
     // Obtain CPU cores which are reserved for the foreground app. The audio thread can be

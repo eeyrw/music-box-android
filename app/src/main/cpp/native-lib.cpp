@@ -90,7 +90,9 @@ Java_com_yuan_midiplayer_MusicBoxEngine_nativePause(JNIEnv *env, jclass thiz, jl
     } else {
         LOGE("Engine handle is invalid, call createEngine() to create a new one");
     }
-}extern "C"
+}
+
+extern "C"
 JNIEXPORT jfloatArray JNICALL
 Java_com_yuan_midiplayer_MusicBoxEngine_nativeGetWaveformData(JNIEnv *env, jclass thiz,
                                                               jlong engine_handle) {
@@ -109,7 +111,64 @@ Java_com_yuan_midiplayer_MusicBoxEngine_nativeGetWaveformData(JNIEnv *env, jclas
     env->ReleaseFloatArrayElements(jarr, arr, 0);
     //5.返回数组
     return jarr;
-}extern "C"
+}
+
+
+extern "C"
+JNIEXPORT jfloatArray JNICALL
+Java_com_yuan_midiplayer_MusicBoxEngine_nativeGetSpectrumData(JNIEnv *env, jclass thiz,
+                                                              jlong engine_handle) {
+    //1.新建长度len数组
+    jfloatArray jarr = env->NewFloatArray(128);
+    //2.获取数组指针
+    jfloat *arr = env->GetFloatArrayElements(jarr, NULL);
+    //3.赋值
+    auto *engine = reinterpret_cast<MusicBoxEngine *>(engine_handle);
+    if (engine) {
+        engine->readSpectrumData(arr);
+    } else {
+        LOGE("Engine handle is invalid, call createEngine() to create a new one");
+    }
+    //4.释放资源
+    env->ReleaseFloatArrayElements(jarr, arr, 0);
+    //5.返回数组
+    return jarr;
+}
+
+
+extern "C"
+JNIEXPORT jobject JNICALL
+Java_com_yuan_midiplayer_MusicBoxEngine_nativeGetVuLevel(JNIEnv *env, jclass thiz,
+                                                         jlong engine_handle) {
+    auto *engine = reinterpret_cast<MusicBoxEngine *>(engine_handle);
+    if (engine) {
+        const VuLevel *frame = engine->vuMeterProcessor.snapshot.beginRead();
+        if (!frame) return nullptr;
+
+        jclass cls = env->FindClass("com/customview/graph/VuLevel");
+        jmethodID ctor = env->GetMethodID(cls, "<init>", "()V");
+        jobject obj = env->NewObject(cls, ctor);
+
+        jfieldID fidRms = env->GetFieldID(cls, "rmsDb", "F");
+        jfieldID fidPeak = env->GetFieldID(cls, "peakDb", "F");
+        jfieldID fidHold = env->GetFieldID(cls, "peakHoldDb", "F");
+
+        env->SetFloatField(obj, fidRms, frame->rmsDb);
+        env->SetFloatField(obj, fidPeak, frame->peakDb);
+        env->SetFloatField(obj, fidHold, frame->peakHoldDb);
+
+        engine->vuMeterProcessor.snapshot.endRead(frame);
+
+        return obj;
+    } else {
+        LOGE("Engine handle is invalid, call createEngine() to create a new one");
+        return nullptr;
+    }
+
+
+}
+
+extern "C"
 JNIEXPORT void JNICALL
 Java_com_yuan_midiplayer_MusicBoxEngine_nativeResetSynthesizer(JNIEnv *env, jclass clazz,
                                                                jlong engine_handle) {
