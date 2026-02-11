@@ -571,14 +571,14 @@ public class PianoRollView extends View {
 
 
         /* =========================
-         * 1️⃣ 处理 transpose / seek 后的键盘状态重建
+         * 1️⃣ 处理 transpose 后的键盘状态重建
          * ========================= */
         if (needRebuildKeyState) {
             // 清空所有键的状态
             for (PianoKey key : keys) {
                 key.velocity = 0f;
                 key.lastPressedTime = -1;
-                key.lastReleasedTime = currentTimeMs;
+                key.lastReleasedTime = -1;  // ✅ 改为 -1
             }
 
             // 重新激活当前仍在 hold 的音符
@@ -593,7 +593,7 @@ public class PianoRollView extends View {
                         if (key != null) {
                             key.velocity = fn.velocity;
                             key.lastPressedTime = on;
-                            key.lastReleasedTime = 0;
+                            key.lastReleasedTime = -1;  // ✅ 改为 -1（表示还在按下）
                         }
                     }
                 }
