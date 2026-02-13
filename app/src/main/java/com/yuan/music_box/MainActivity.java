@@ -2,6 +2,7 @@ package com.yuan.music_box;
 
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.media.AudioManager;
 import android.net.Uri;
 import android.os.Build;
@@ -15,6 +16,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.preference.PreferenceManager;
 
 import com.customview.graph.AudioMeterView;
 import com.customview.graph.PianoRollView;
@@ -123,6 +125,13 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        ImageButton btnSettings = findViewById(R.id.btnSettings);
+
+        btnSettings.setOnClickListener(v -> {
+            // 跳转到设置页
+            Intent intent = new Intent(this, SettingsActivity.class);
+            startActivity(intent);
+        });
 
         // 监听移调变化
         transposeSlider.setOnSemitoneChangeListener(semitone -> {
@@ -132,6 +141,8 @@ public class MainActivity extends AppCompatActivity {
 
             midiPlayer.setTranspose(semitone);
             pianoRollView.setTransposeSemitone(semitone);
+
+
         });
 
 
@@ -173,10 +184,19 @@ public class MainActivity extends AppCompatActivity {
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        transposeSlider.setSemitone(transpose);
-                        pianoRollView.setTransposeSemitone(transpose);
+                        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getApplication());
                         TextView tvTransposeValue = findViewById(R.id.tvTransposeValue);
-                        tvTransposeValue.setText(String.format("Transpose: %d semitone", transpose));
+
+                        if(prefs.getBoolean("prefApplySuggestionTranspose", false)) {
+                            transposeSlider.setSemitone(transpose);
+                            pianoRollView.setTransposeSemitone(transpose);
+                        }
+                        else {
+                            transposeSlider.setSemitone(0);
+                            pianoRollView.setTransposeSemitone(0);
+                            tvTransposeValue.setText(String.format("Transpose: %d semitone", 0));
+                        }
+
                     }
                 });
             }

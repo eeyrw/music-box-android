@@ -16,6 +16,7 @@
         android:theme="@style/AppTheme">
         <activity android:name=".FileListActivity"></activity>
         <activity android:name=".ContinuousCaptureActivity"></activity>
+        <activity android:name=".SettingsActivity"></activity>
         <activity
             android:name=".MainActivity"
             android:label="@string/titlebar_text"
