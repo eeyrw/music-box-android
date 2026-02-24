@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item
+        android:id="@+id/action_choose_sample"
+        android:title="Choose sample MIDI" />
+
+    <item
+        android:id="@+id/action_choose_file"
+        android:title="Choose MIDI file" />
+
+    <item
+        android:id="@+id/action_scan_qr"
+        android:title="Scan QR song" />
+
+</menu>

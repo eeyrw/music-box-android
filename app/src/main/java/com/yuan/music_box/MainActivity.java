@@ -10,12 +10,12 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
-import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.PopupMenu;
 import androidx.preference.PreferenceManager;
 
 import com.customview.graph.AudioMeterView;
@@ -93,37 +93,42 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        Button btnChooseSampleMidi = findViewById(R.id.btnChooseSampleMidi);
-        btnChooseSampleMidi.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                midiPlayer.pause();
-                Intent intent = new Intent(MainActivity.this, FileListActivity.class);
-                startActivityForResult(intent, 0);//此处的requestCode应与下面结果处理函中调用的requestCode一致
-            }
+
+        ImageButton btnMore = findViewById(R.id.btnMore);
+
+        btnMore.setOnClickListener(v -> {
+
+            PopupMenu popup = new PopupMenu(this, v);
+            popup.getMenuInflater().inflate(R.menu.file_menu, popup.getMenu());
+
+            popup.setOnMenuItemClickListener(item -> {
+                int id = item.getItemId();
+
+                if (id == R.id.action_choose_sample) {
+                    midiPlayer.pause();
+                    Intent intent = new Intent(MainActivity.this, FileListActivity.class);
+                    startActivityForResult(intent, 0);//此处的requestCode应与下面结果处理函中调用的requestCode一致
+                    return true;
+                } else if (id == R.id.action_choose_file) {
+                    Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
+                    // intent.putExtra(Intent.EXTRA_MIME_TYPES, new String[]{"audio/mid"});
+                    intent.setType("*/*");//设置类型，我这里是任意类型，任意后缀的可以这样写。
+                    intent.addCategory(Intent.CATEGORY_OPENABLE);
+                    startActivityForResult(intent, 2);
+                    return true;
+                } else if (id == R.id.action_scan_qr) {
+                    midiPlayer.pause();
+                    Intent intent = new Intent(MainActivity.this, ContinuousCaptureActivity.class);
+                    startActivityForResult(intent, 3);//此处的requestCode应与下面结果处理函中调用的requestCode一致
+                    return true;
+                }
+
+                return false;
+            });
+
+            popup.show();
         });
 
-        Button btnChooseMidi = findViewById(R.id.btnChooseMidi);
-        btnChooseMidi.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
-                // intent.putExtra(Intent.EXTRA_MIME_TYPES, new String[]{"audio/mid"});
-                intent.setType("*/*");//设置类型，我这里是任意类型，任意后缀的可以这样写。
-                intent.addCategory(Intent.CATEGORY_OPENABLE);
-                startActivityForResult(intent, 2);
-            }
-        });
-
-        Button btnScanQRCode = findViewById(R.id.btnScanQRCode);
-        btnScanQRCode.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                midiPlayer.pause();
-                Intent intent = new Intent(MainActivity.this, ContinuousCaptureActivity.class);
-                startActivityForResult(intent, 3);//此处的requestCode应与下面结果处理函中调用的requestCode一致
-            }
-        });
 
         ImageButton btnSettings = findViewById(R.id.btnSettings);
 

@@ -3,175 +3,153 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="#F2F2F2"
     android:keepScreenOn="true">
 
-    <!-- ================= Root ================= -->
+    <!-- ================= Header ================= -->
     <LinearLayout
-        android:id="@+id/root"
+        android:id="@+id/header"
         android:layout_width="0dp"
-        android:layout_height="0dp"
-        android:orientation="vertical"
-        android:background="#F2F2F2"
+        android:layout_height="wrap_content"
+        android:background="@color/colorPrimaryDark"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:padding="12dp"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
 
-        <!-- ================= Header ================= -->
+        <!-- 左侧文字区域 -->
         <LinearLayout
-            android:id="@+id/header"
-            android:layout_width="match_parent"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:background="@color/colorPrimaryDark"
-            android:orientation="horizontal"
-            android:gravity="center_vertical"
-            android:padding="12dp">
-
-            <!-- 左侧文字区域 -->
-            <LinearLayout
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:orientation="vertical">
-
-                <TextView
-                    android:id="@+id/tvPlayStatus"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:alpha="0.85"
-                    android:text="PLAYING"
-                    android:textColor="@android:color/white"
-                    android:textSize="14sp"
-                    android:textStyle="bold" />
-
-                <TextView
-                    android:id="@+id/tvFileName"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="2dp"
-                    android:ellipsize="end"
-                    android:maxLines="1"
-                    android:text="No MIDI file selected"
-                    android:textColor="@android:color/white"
-                    android:textSize="18sp"
-                    android:textStyle="bold" />
-            </LinearLayout>
-
-            <!-- 右侧齿轮按钮 -->
-            <ImageButton
-                android:id="@+id/btnSettings"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
-                android:background="?attr/selectableItemBackgroundBorderless"
-                android:contentDescription="Settings"
-                android:padding="8dp"
-                android:src="@drawable/ic_settings"
-                app:tint="@android:color/white" />
-
-        </LinearLayout>
-
-        <!-- ================= Visualization ================= -->
-        <com.customview.graph.AudioMeterView
-            android:id="@+id/audio_meter"
-            android:layout_width="match_parent"
-            android:layout_height="120dp" />
-
-        <com.customview.graph.PianoRollView
-            android:id="@+id/pianoRollView"
-            android:layout_width="match_parent"
-            android:layout_height="200dp" />
-
-        <!-- ================= Transport ================= -->
-        <LinearLayout
-            android:id="@+id/transport"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:gravity="center"
-            android:orientation="horizontal"
-            android:paddingHorizontal="12dp">
-
-            <ImageButton
-                android:id="@+id/btnPlay"
-                android:layout_width="48dp"
-                android:layout_height="48dp"
-                android:background="?attr/selectableItemBackgroundBorderless"
-                android:contentDescription="Play"
-                android:src="@drawable/ic_play" />
-
-            <ImageButton
-                android:id="@+id/btnPause"
-                android:layout_width="48dp"
-                android:layout_height="48dp"
-                android:layout_marginHorizontal="16dp"
-                android:background="?attr/selectableItemBackgroundBorderless"
-                android:contentDescription="Pause"
-                android:src="@drawable/ic_pause" />
-
-            <ImageButton
-                android:id="@+id/btnStop"
-                android:layout_width="48dp"
-                android:layout_height="48dp"
-                android:background="?attr/selectableItemBackgroundBorderless"
-                android:contentDescription="Stop"
-                android:src="@drawable/ic_stop" />
-        </LinearLayout>
-
-        <!-- ================= Transpose ================= -->
-        <LinearLayout
-            android:id="@+id/transposePanel"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:paddingHorizontal="12dp">
+            android:layout_weight="1"
+            android:orientation="vertical">
 
             <TextView
-                android:id="@+id/tvTransposeValue"
+                android:id="@+id/tvPlayStatus"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:alpha="0.85"
+                android:text="PLAYING"
+                android:textColor="@android:color/white"
+                android:textSize="14sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/tvFileName"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="6dp"
-                android:gravity="left"
-                android:text="0 half-tone"
-                android:textSize="14sp" />
-
-            <com.customview.graph.TransposeSliderView
-                android:id="@+id/transposeSlider"
-                android:layout_width="match_parent"
-                android:layout_height="60dp" />
-
+                android:layout_marginTop="2dp"
+                android:ellipsize="end"
+                android:maxLines="1"
+                android:text="No MIDI file selected"
+                android:textColor="@android:color/white"
+                android:textSize="18sp"
+                android:textStyle="bold" />
         </LinearLayout>
 
-        <!-- ================= File Actions ================= -->
-        <LinearLayout
-            android:id="@+id/fileActions"
+        <!-- 右侧齿轮按钮 -->
+        <ImageButton
+            android:id="@+id/btnSettings"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="Settings"
+            android:padding="8dp"
+            android:src="@drawable/ic_settings"
+            app:tint="@android:color/white" />
+
+    </LinearLayout>
+
+    <!-- ================= Audio Meter ================= -->
+    <com.customview.graph.AudioMeterView
+        android:id="@+id/audio_meter"
+        android:layout_width="0dp"
+        android:layout_height="120dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/header" />
+
+    <!-- ================= Piano Roll（自适应核心） ================= -->
+    <com.customview.graph.PianoRollView
+        android:id="@+id/pianoRollView"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        app:layout_constraintBottom_toTopOf="@id/transport"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/audio_meter" />
+
+    <!-- ================= Transport ================= -->
+    <LinearLayout
+        android:id="@+id/transport"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:orientation="horizontal"
+        android:paddingHorizontal="12dp"
+        app:layout_constraintBottom_toTopOf="@id/transposePanel"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent">
+
+        <ImageButton
+            android:id="@+id/btnPlay"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="Play"
+            android:src="@drawable/ic_play" />
+
+        <ImageButton
+            android:id="@+id/btnPause"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:layout_marginHorizontal="16dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="Pause"
+            android:src="@drawable/ic_pause" />
+
+        <ImageButton
+            android:id="@+id/btnStop"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="Stop"
+            android:src="@drawable/ic_stop" />
+
+        <ImageButton
+            android:id="@+id/btnMore"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="More"
+            android:src="@drawable/ic_more_horiz_24" />
+    </LinearLayout>
+
+    <!-- ================= Transpose ================= -->
+    <LinearLayout
+        android:id="@+id/transposePanel"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingHorizontal="12dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent">
+
+        <TextView
+            android:id="@+id/tvTransposeValue"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:padding="12dp">
+            android:layout_marginTop="6dp"
+            android:text="0 half-tone"
+            android:textSize="14sp" />
 
-            <Button
-                android:id="@+id/btnChooseSampleMidi"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="6dp"
-                android:text="Choose sample MIDI"
-                android:textAllCaps="false" />
-
-            <Button
-                android:id="@+id/btnChooseMidi"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="6dp"
-                android:text="Choose MIDI file"
-                android:textAllCaps="false" />
-
-            <Button
-                android:id="@+id/btnScanQRCode"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="6dp"
-                android:text="Scan QR song"
-                android:textAllCaps="false" />
-        </LinearLayout>
+        <com.customview.graph.TransposeSliderView
+            android:id="@+id/transposeSlider"
+            android:layout_width="match_parent"
+            android:layout_height="60dp" />
 
     </LinearLayout>
 
