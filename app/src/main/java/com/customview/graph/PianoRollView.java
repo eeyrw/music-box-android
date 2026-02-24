@@ -48,7 +48,7 @@ public class PianoRollView extends View {
     private int transposeSemitone = 0;
     private boolean needRebuildKeyState = false;
     // 时间轴标尺：每 1px 对应多少毫秒（系统级参数）
-    private float msPerPx = 20.0f; // 例如 1px = 20ms
+    private float msPerPx = 3.0f; // 例如 1px = 20ms
     int nextEventIndex = 0;
 
 
@@ -91,7 +91,7 @@ public class PianoRollView extends View {
     @Override
     protected void onSizeChanged(int w, int h, int oldw, int oldh) {
         super.onSizeChanged(w, h, oldw, oldh);
-        keyHeight = h * 0.2f;
+        keyHeight = h * 0.15f;
         blackKeyHeight = keyHeight * 0.6f;
 
         int whiteKeyCount = countWhiteKeys(0, 127);
@@ -919,30 +919,31 @@ class KeyboardRenderer {
     }
 }
 
-// ------------------- FallingNoteRenderer -------------------
+// ------------------- FallingNoteRenderer (Horse Centered Edition) -------------------
 class FallingNoteRenderer {
 
-    private final Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
-    private final Paint strokePaint = new Paint(Paint.ANTI_ALIAS_FLAG); // 👈 新增
+    private static final String HORSE = "🐎";
+
+    private final Paint emojiPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
 
     public FallingNoteRenderer() {
-        paint.setStyle(Paint.Style.FILL);
-
-        strokePaint.setStyle(Paint.Style.STROKE);
-        strokePaint.setStrokeWidth(2f); // 1–2px 都行
-        strokePaint.setColor(Color.DKGRAY);
+        emojiPaint.setTextAlign(Paint.Align.LEFT);
+        emojiPaint.setTextSize(64f);
     }
 
-    public void draw(Canvas canvas, List<PianoRollView.FallingNote> notes,
+    public void draw(Canvas canvas,
+                     List<PianoRollView.FallingNote> notes,
                      List<PianoRollView.PianoKey> keys,
-                     float msPerPx,                 // ✅ 新增
+                     float msPerPx,
                      float whiteKeyWidth,
                      float blackKeyWidth,
                      int noteColor,
-                     int transposeSemitone, PianoRollView.PianoKey[] keyByMidi) {
+                     int transposeSemitone,
+                     PianoRollView.PianoKey[] keyByMidi) {
 
         for (PianoRollView.FallingNote fn : notes) {
-            float x = 0;
+
+            float x = 0f;
             boolean isBlack = false;
             int displayNote = fn.midiNote + transposeSemitone;
 
@@ -954,30 +955,34 @@ class FallingNoteRenderer {
                 }
             }
 
-            float width = isBlack ? blackKeyWidth : whiteKeyWidth;
-            float barHeight = fn.durationMs / msPerPx;
+            float keyWidth = isBlack ? blackKeyWidth : whiteKeyWidth;
 
-            // note-on 在 fn.y，音符向“过去”延伸（向上）
-            float top = fn.y - barHeight;
-            if (top < 0) top = 0;
+            // 根据 velocity 调整大小
+            float sizeScale = 0.7f + fn.velocity * 0.6f;
+            float textSize = keyWidth * sizeScale;
 
-            paint.setColor(noteColor);
-            paint.setAlpha((int) (255 * fn.velocity));
+            emojiPaint.setTextSize(textSize);
+            // 获取文字宽度（用于水平居中）
+            float textWidth = emojiPaint.measureText(HORSE);
 
-            // ① 填充
-            canvas.drawRect(x, top, x + width, fn.y, paint);
+            // 获取字体 metrics（用于垂直对齐）
+            Paint.FontMetrics fm = emojiPaint.getFontMetrics();
 
-            // ② 描边（同 velocity，稍微弱一点也可以）
-            strokePaint.setAlpha((int) (180 * fn.velocity));
+            // 🎯 水平居中
+            float centerX = x + keyWidth * 0.5f;
+            float drawX = centerX - textWidth * 0.5f;
 
-            // 为了避免描边被裁掉，向内收半个 stroke
-            float half = strokePaint.getStrokeWidth() * 0.5f;
-            canvas.drawRect(
-                    x + half,
-                    top + half,
-                    x + width - half,
-                    fn.y - half,
-                    strokePaint
+            // 🎯 垂直底部对齐（马蹄踩线）
+            float baseline = fn.y - fm.descent;
+
+            // 🐎 轻微左右摆动
+            float sway = (float) Math.sin(fn.y * 0.02f) * keyWidth * 0.15f;
+
+            canvas.drawText(
+                    HORSE,
+                    drawX + sway,
+                    baseline,
+                    emojiPaint
             );
         }
     }
